@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "IxjpBkpbJM9vDb2nQismvS6X6CdC3VAREoOwKHLxsuVXNb3jrVLOAIdU812MNzGGRWCe/xmOTE8b9rR4ykipJQ==",
+  "dgSpecHash": "e2FI6rgrWhCRKkWewKSt+0LhNbhex7VTrQFthHsZvc/aJLuoxSZnChylX+E1cjBrTUlyAXg2UW8hnpaABzosig==",
   "success": true,
-  "projectFilePath": "D:\\.net\\New folder (2)\\Learnings.Domain\\Learnings.Domain.csproj",
+  "projectFilePath": "D:\\.net\\New folder (2)\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\abu.bakar\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\8.0.10\\microsoft.aspnetcore.cryptography.internal.8.0.10.nupkg.sha512",
     "C:\\Users\\abu.bakar\\.nuget\\packages\\microsoft.aspnetcore.cryptography.keyderivation\\8.0.10\\microsoft.aspnetcore.cryptography.keyderivation.8.0.10.nupkg.sha512",

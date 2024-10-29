@@ -2,8 +2,13 @@
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 
 namespace Core_Learnings.Controllers
 {
@@ -13,6 +18,9 @@ namespace Core_Learnings.Controllers
     {
         private readonly IUserService _userService;
 
+        private string secrt_key = "ThisIsASecretKeyFasjasdbksahdkasorJWT";
+        private string Issuer = "https://yourdomain.com";
+        private string Audience = "https://yourdomain.com";
         public UserController(IUserService userService)
         {
             _userService = userService;
@@ -30,7 +38,7 @@ namespace Core_Learnings.Controllers
 
             return Ok(response);
         }
-
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<ResponseBase<List<Users>>>> GetAllUsers()
         {
@@ -77,6 +85,25 @@ namespace Core_Learnings.Controllers
             }
 
             return Ok(new ResponseBase<string>(null,"User deleted successfully", HttpStatusCode.OK));
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
+        {
+            var response = await _userService.LoginAsync(loginRequest);
+            if (response == null)
+                return Unauthorized(new { message = "Invalid credentials" });
+
+            return Ok(response);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        {
+            var response = await _userService.RefreshTokenAsync(refreshToken);
+            if (response == null)
+                return Unauthorized(new { message = "Invalid refresh token" });
+
+            return Ok(response);
         }
     }
 }

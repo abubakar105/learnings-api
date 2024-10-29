@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "BEIueDVO+xB5c8Avs2480ueycW2dJI0HTt8Wa6H2JKYp4NvVaVk51hioQWTmgwg8HOViSfE5hT/SesiF4anveQ==",
+  "dgSpecHash": "m9lLO/hHglAvubtdklBIVblmcxIaEkcuDT99mPhSH66/5CuyFFsMApty5jogjc5lMq5WSkzvghuuC0Ed3tKY/g==",
   "success": true,
-  "projectFilePath": "D:\\.net\\New folder (2)\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj",
+  "projectFilePath": "D:\\.net\\New folder (2)\\learnings-.net\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\abu.bakar\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\abu.bakar\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",

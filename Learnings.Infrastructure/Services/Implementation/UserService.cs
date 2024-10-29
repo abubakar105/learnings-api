@@ -3,21 +3,33 @@ using Learnings.Application.Repositories.Interface;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
+using Learnings.Infrastrcuture.Repositories.Implementation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Learnings.Infrastructure.Services.Implementation
 {
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IConfiguration _configuration;
         private readonly UserManager<Users> _userManager;
-
-        public UserService(IUserRepository userRepository, UserManager<Users> userManager)
+        private readonly Dictionary<string, string> _refreshTokens = new();
+        private readonly JwtSettings _jwtSettings;
+        public UserService(IUserRepository userRepository, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings)
         {
             _userRepository = userRepository;
             _userManager = userManager;
-
+            _configuration = configuration;
+            _jwtSettings = jwtSettings.Value;
         }
 
         public async Task<ResponseBase<UserDto>> GetUserByIdAsync(int id)
@@ -127,26 +139,44 @@ namespace Learnings.Infrastructure.Services.Implementation
 
             try
             {
+                var existedUser = await _userManager.FindByEmailAsync(userDto.Email);
+                if (existedUser != null)
+                {
+                    return response = new ResponseBase<Users>(null, "User already Exists.", HttpStatusCode.BadRequest);
+                }
                 var user = new Users
                 {
                     FirstName = userDto.FirstName,
                     LastName = userDto.LastName,
-                    UserName= userDto.UserName,
+                    UserName = userDto.UserName,
                     Email = userDto.Email,
                     PhoneNumber = userDto.PhoneNumber,
-                    PasswordHash=userDto.Password
+                    PasswordHash = userDto.Password
                 };
-                var res = await _userManager.CreateAsync(user);
 
-                if (res.Succeeded)
+                var createResult = await _userManager.CreateAsync(user, userDto.Password);
+
+                if (createResult.Succeeded)
                 {
-                    return new ResponseBase<Users>(user, "User created successfully", HttpStatusCode.OK);
+                    var claimResult = await _userManager.AddToRoleAsync(user, "User");
+
+                    if (claimResult.Succeeded)
+                    {
+                        return new ResponseBase<Users>(user, "User created successfully", HttpStatusCode.OK);
+                    }
+                    else
+                    {
+                        return new ResponseBase<Users>(null, "User created but failed to assign default role", HttpStatusCode.BadRequest)
+                        {
+                            Errors = claimResult.Errors.Select(e => e.Description).ToList()
+                        };
+                    }
                 }
                 else
                 {
-                    response = new ResponseBase<Users>(null, "Could not User", HttpStatusCode.BadRequest)
+                    response = new ResponseBase<Users>(null, "Could not create user", HttpStatusCode.BadRequest)
                     {
-                        Errors = res.Errors.Select(e => e.Description).ToList()
+                        Errors = createResult.Errors.Select(e => e.Description).ToList()
                     };
                     return response;
                 }
@@ -192,30 +222,78 @@ namespace Learnings.Infrastructure.Services.Implementation
             }
 
         }
+        public async Task<TokenResponse> LoginAsync(LoginDto loginRequest)
+        {
+            var user = await _userManager.FindByEmailAsync(loginRequest.Email);
+            if (user == null)
+            {
+                return null;
+            }
+            var checkPassword = await _userManager.CheckPasswordAsync(user, loginRequest.Password);
+            if (user == null || !checkPassword)
+            {
+                return null;
+            }
+            var userRole = await _userManager.GetRolesAsync(user);
+            var tokenResponse = GenerateTokens(user, userRole);
+            _refreshTokens[user.Id] = tokenResponse.RefreshToken;
 
-        //public async Task<ResponseBase<Users>> AddUserAsyncIdentity(Users user)
-        //{
-        //    ResponseBase<Users> response = null;
-        //    try
-        //    {
-        //        var res = await _userManager.CreateAsync(user);
-        //        return response = new response<Users>(res, "OK", HttpStatusCode.OK);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        var errorMessage = "Could not found user";
-        //        response = new ResponseBase<List<Users>>(null, errorMessage, HttpStatusCode.InternalServerError)
-        //        {
-        //            Errors = new List<string>
-        //            {
-        //                ex.Message,
-        //                ex.InnerException?.Message,
-        //                ex.StackTrace
-        //            }
-        //        };
-        //        return response;
-        //    }
+            return tokenResponse;
+        }
 
-        //}
+        public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
+        {
+            var userId = _refreshTokens.FirstOrDefault(x => x.Value == refreshToken).Key;
+            if (string.IsNullOrEmpty(userId)) return null;
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return null;
+            var userRole = await _userManager.GetRolesAsync(user);
+
+            var newTokens = GenerateTokens(user, userRole);
+            _refreshTokens[userId] = newTokens.RefreshToken;
+
+            return newTokens;
+        }
+        private TokenResponse GenerateTokens(Users user, IList<string> userRole)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            };
+            foreach (var role in userRole)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+            var token = new JwtSecurityToken(
+                issuer: _jwtSettings.Issuer,
+                audience: _jwtSettings.Audience,
+                claims: claims,
+                notBefore: DateTime.UtcNow,
+                expires: DateTime.UtcNow.AddMinutes(1),
+                signingCredentials: credentials);
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return new TokenResponse
+            {
+                Token = tokenString,
+                RefreshToken = null,
+                Expiration = DateTime.UtcNow.AddMinutes(1)
+            };
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
     }
 }
