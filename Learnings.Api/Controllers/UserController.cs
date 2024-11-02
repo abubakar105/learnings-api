@@ -17,10 +17,6 @@ namespace Core_Learnings.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-
-        private string secrt_key = "ThisIsASecretKeyFasjasdbksahdkasorJWT";
-        private string Issuer = "https://yourdomain.com";
-        private string Audience = "https://yourdomain.com";
         public UserController(IUserService userService)
         {
             _userService = userService;
@@ -61,10 +57,6 @@ namespace Core_Learnings.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, UserDto userDto)
         {
-            //if (id != userDto.UsrId)
-            //{
-            //    return BadRequest(new ResponseBase<string>(null, "User ID mismatch", HttpStatusCode.BadRequest));
-            //}
 
             var response = await _userService.UpdateUserAsync(id,userDto);
             if (response.Data == null)
@@ -104,6 +96,13 @@ namespace Core_Learnings.Controllers
                 return Unauthorized(new { message = "Invalid refresh token" });
 
             return Ok(response);
+        }
+        [HttpPost("resetPassword")]
+        public async Task<ResponseBase<Users>> ResetPassword([FromBody] ChangePasswordModel model)
+        {
+            var response = await _userService.ChangePassword(model);
+
+            return response;
         }
     }
 }
