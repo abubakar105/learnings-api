@@ -53,6 +53,13 @@ namespace Core_Learnings.Controllers
 
             return Ok(response);
         }
+        [HttpPost("duplicateUser")]
+        public async Task<ActionResult<ResponseBase<Users>>> CheckEmail([FromBody] CheckDuplicateUser email)
+        {
+            var response = await _userService.CheckEmailExists(email.Email);
+
+            return Ok(response);
+        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, UserDto userDto)
@@ -81,17 +88,25 @@ namespace Core_Learnings.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
         {
+            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Email) || string.IsNullOrEmpty(loginRequest.Password))
+            {
+                return BadRequest(new { Message = "Email and password are required." });
+            }
+
             var response = await _userService.LoginAsync(loginRequest);
+
             if (response == null)
-                return Unauthorized(new { message = "Invalid credentials" });
+            {
+                return Unauthorized(new { Message = "Invalid email or password." });
+            }
 
             return Ok(response);
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshToken)
         {
-            var response = await _userService.RefreshTokenAsync(refreshToken);
+            var response = await _userService.RefreshTokenAsync(refreshToken.RefreshToken);
             if (response == null)
                 return Unauthorized(new { message = "Invalid refresh token" });
 

@@ -146,13 +146,13 @@ namespace Learnings.Infrastructure.Services.Implementation
                 var existedUser = await _userManager.FindByEmailAsync(userDto.Email);
                 if (existedUser != null)
                 {
-                    return response = new ResponseBase<Users>(null, "User already Exists.", HttpStatusCode.BadRequest);
+                    return response = new ResponseBase<Users>(null, "User already Exists.", HttpStatusCode.Conflict);
                 }
                 var user = new Users
                 {
                     FirstName = userDto.FirstName,
                     LastName = userDto.LastName,
-                    UserName = userDto.UserName,
+                    UserName = userDto.Email,
                     Email = userDto.Email,
                     PhoneNumber = userDto.PhoneNumber,
                     PasswordHash = userDto.Password
@@ -266,6 +266,31 @@ namespace Learnings.Infrastructure.Services.Implementation
 
             return newTokens;
         }
+        //public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
+        //{
+        //    var userId = await GetUserIdByRefreshTokenAsync(refreshToken);
+        //    if (string.IsNullOrEmpty(userId))
+        //        return null;
+
+        //    var user = await _userManager.FindByIdAsync(userId);
+        //    if (user == null || !await IsRefreshTokenValid(userId, refreshToken))
+        //        return null;
+
+        //    var storedExpirationString = await _userManager.GetAuthenticationTokenAsync(user, "MyApp", "RefreshTokenExpiration");
+        //    if (DateTime.TryParse(storedExpirationString, out DateTime storedExpiration) && storedExpiration < DateTime.UtcNow)
+        //    {
+        //        return null;
+        //    }
+
+        //    var userRoles = await _userManager.GetRolesAsync(user);
+        //    var newTokens = GenerateTokens(user, userRoles);
+
+        //    var newRefreshToken = GenerateRefreshToken();
+        //    await UpdateRefreshTokenAsync(user.Id, newRefreshToken);
+        //    newTokens.RefreshToken = newRefreshToken;
+
+        //    return newTokens;
+        //}
 
         private async Task SaveRefreshTokenAsync(string userId, string refreshToken)
         {
@@ -278,6 +303,21 @@ namespace Learnings.Infrastructure.Services.Implementation
 
             await _userManager.SetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken", refreshToken);
         }
+        //private async Task SaveRefreshTokenAsync(string userId, string refreshToken)
+        //{
+        //    var userToken = await _userManager.GetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken");
+
+        //    if (!string.IsNullOrEmpty(userToken))
+        //    {
+        //        await _userManager.RemoveAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken");
+        //    }
+
+        //    // Here, you could also store the refresh token expiration date
+        //    var expiration = DateTime.UtcNow.AddDays(7);  // Refresh token expires in 7 days
+        //    await _userManager.SetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken", refreshToken);
+        //    await _userManager.SetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshTokenExpiration", expiration.ToString("o"));
+        //}
+
         private async Task UpdateRefreshTokenAsync(string userId, string newRefreshToken)
         {
             await SaveRefreshTokenAsync(userId, newRefreshToken);
@@ -302,16 +342,48 @@ namespace Learnings.Infrastructure.Services.Implementation
         }
 
 
+        //private TokenResponse GenerateTokens(Users user, IList<string> userRole)
+        //{
+        //    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+        //    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        //    var claims = new List<Claim>
+        //    {
+        //        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+        //        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+        //    };
+        //    foreach (var role in userRole)
+        //    {
+        //        claims.Add(new Claim(ClaimTypes.Role, role));
+        //    }
+        //    var token = new JwtSecurityToken(
+        //        issuer: _jwtSettings.Issuer,
+        //        audience: _jwtSettings.Audience,
+        //        claims: claims,
+        //        notBefore: DateTime.UtcNow,
+        //        expires: DateTime.UtcNow.AddMinutes(15),
+        //        signingCredentials: credentials);
+
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    var tokenString = tokenHandler.WriteToken(token);
+
+        //    return new TokenResponse
+        //    {
+        //        Token = tokenString,
+        //        RefreshToken = null,
+        //        Expiration = DateTime.UtcNow.AddDays(7)
+        //    };
+        //}
         private TokenResponse GenerateTokens(Users user, IList<string> userRole)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            };
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+        new Claim(JwtRegisteredClaimNames.Email, user.Email),
+    };
             foreach (var role in userRole)
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
@@ -321,17 +393,19 @@ namespace Learnings.Infrastructure.Services.Implementation
                 audience: _jwtSettings.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(15),
+                expires: DateTime.UtcNow.AddMinutes(1),
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenString = tokenHandler.WriteToken(token);
 
+            var refreshToken = GenerateRefreshToken();
             return new TokenResponse
             {
                 Token = tokenString,
-                RefreshToken = null,
-                Expiration = DateTime.UtcNow.AddMinutes(15)
+                RefreshToken = refreshToken,
+                Expiration = DateTime.UtcNow.AddMinutes(1),  // Access token expiration time
+                RefreshTokenExpiration = DateTime.UtcNow.AddDays(7)  // Refresh token expiration time (7 days)
             };
         }
 
@@ -377,5 +451,17 @@ namespace Learnings.Infrastructure.Services.Implementation
             }
         }
 
+        public async Task<ResponseBase<Users>> CheckEmailExists(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user == null)
+                return new ResponseBase<Users>(null, "User not found", HttpStatusCode.NotFound);
+            else
+            {
+                return new ResponseBase<Users>(user, "User already exists", HttpStatusCode.OK);
+
+            }
+        }
     }
 }

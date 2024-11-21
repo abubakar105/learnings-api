@@ -12,7 +12,20 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      builder =>
+                      {
+                          // Allow specific domains (you can add more domains as required)
+                          builder.WithOrigins("http://localhost:4200") // Frontend URL (adjust if different)
+                                 .AllowAnyHeader()  // Allow any headers
+                                 .AllowAnyMethod(); // Allow any HTTP methods (GET, POST, PUT, etc.)
+                      });
+});
 var configuration = builder.Configuration;
 
 // JWT Settings
@@ -104,6 +117,7 @@ builder.Services.AddSwaggerGen(opt =>
         }
     });
 });
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
@@ -135,6 +149,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors(MyAllowSpecificOrigins);
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
