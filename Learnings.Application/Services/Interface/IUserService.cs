@@ -11,7 +11,11 @@ namespace Learnings.Application.Services.Interface
         Task<ResponseBase<List<Users>>> GetAllUsersAsyncIdentity();
         Task<ResponseBase<UserDto>> AddUserAsync(UserDto user);
         Task<ResponseBase<Users>> AddUserAsyncIdentity(UserDto user);
+        Task<ResponseBase<Users>> CheckEmailExists(string email);
         Task<ResponseBase<UserDto>> UpdateUserAsync(int id,UserDto user);
         Task<ResponseBase<UserDto>> DeleteUserAsync(int id);
+        Task<TokenResponse> LoginAsync(LoginDto loginRequest);
+        Task<TokenResponse> RefreshTokenAsync(string refreshToken);
+        Task<ResponseBase<Users>> ChangePassword(ChangePasswordModel model);
     }
 }

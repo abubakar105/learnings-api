@@ -2,8 +2,13 @@
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 
 namespace Core_Learnings.Controllers
 {
@@ -12,7 +17,6 @@ namespace Core_Learnings.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-
         public UserController(IUserService userService)
         {
             _userService = userService;
@@ -30,7 +34,7 @@ namespace Core_Learnings.Controllers
 
             return Ok(response);
         }
-
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<ResponseBase<List<Users>>>> GetAllUsers()
         {
@@ -49,14 +53,17 @@ namespace Core_Learnings.Controllers
 
             return Ok(response);
         }
+        [HttpPost("duplicateUser")]
+        public async Task<ActionResult<ResponseBase<Users>>> CheckEmail([FromBody] CheckDuplicateUser email)
+        {
+            var response = await _userService.CheckEmailExists(email.Email);
+
+            return Ok(response);
+        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, UserDto userDto)
         {
-            //if (id != userDto.UsrId)
-            //{
-            //    return BadRequest(new ResponseBase<string>(null, "User ID mismatch", HttpStatusCode.BadRequest));
-            //}
 
             var response = await _userService.UpdateUserAsync(id,userDto);
             if (response.Data == null)
@@ -77,6 +84,40 @@ namespace Core_Learnings.Controllers
             }
 
             return Ok(new ResponseBase<string>(null,"User deleted successfully", HttpStatusCode.OK));
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
+        {
+            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Email) || string.IsNullOrEmpty(loginRequest.Password))
+            {
+                return BadRequest(new { Message = "Email and password are required." });
+            }
+
+            var response = await _userService.LoginAsync(loginRequest);
+
+            if (response == null)
+            {
+                return Unauthorized(new { Message = "Invalid email or password." });
+            }
+
+            return Ok(response);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshToken)
+        {
+            var response = await _userService.RefreshTokenAsync(refreshToken.RefreshToken);
+            if (response == null)
+                return Unauthorized(new { message = "Invalid refresh token" });
+
+            return Ok(response);
+        }
+        [HttpPost("resetPassword")]
+        public async Task<ResponseBase<Users>> ResetPassword([FromBody] ChangePasswordModel model)
+        {
+            var response = await _userService.ChangePassword(model);
+
+            return response;
         }
     }
 }
