@@ -17,5 +17,7 @@ namespace Learnings.Application.Services.Interface
         Task<TokenResponse> LoginAsync(LoginDto loginRequest);
         Task<TokenResponse> RefreshTokenAsync(string refreshToken);
         Task<ResponseBase<Users>> ChangePassword(ChangePasswordModel model);
+        Task<ResponseBase<Users>> ChangeForgetPassword(ResetPassword model);
+        Task<ResponseBase<Users>> ForgetPassword(CheckDuplicateUser model);
     }
 }

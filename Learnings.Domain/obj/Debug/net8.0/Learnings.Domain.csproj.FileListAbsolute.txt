@@ -23,3 +23,16 @@ D:\.net\New folder (2)\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learning
 D:\.net\New folder (2)\learnings-.net\Learnings.Domain\obj\Debug\net8.0\refint\Learnings.Domain.dll
 D:\.net\New folder (2)\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.pdb
 D:\.net\New folder (2)\learnings-.net\Learnings.Domain\obj\Debug\net8.0\ref\Learnings.Domain.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\bin\Debug\net8.0\Learnings.Domain.deps.json
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\bin\Debug\net8.0\Learnings.Domain.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\bin\Debug\net8.0\Learnings.Domain.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.csproj.AssemblyReference.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.AssemblyInfoInputs.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.AssemblyInfo.cs
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.csproj.CoreCompileInputs.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.sourcelink.json
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\refint\Learnings.Domain.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\Learnings.Domain.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Domain\obj\Debug\net8.0\ref\Learnings.Domain.dll
