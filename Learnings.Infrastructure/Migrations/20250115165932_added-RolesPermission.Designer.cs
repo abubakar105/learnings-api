@@ -4,6 +4,7 @@ using Learnings.Infrastrcuture.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Learnings.Infrastructure.Migrations
 {
     [DbContext(typeof(LearningDbContext))]
-    partial class LearningDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250115165932_added-RolesPermission")]
+    partial class addedRolesPermission
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
