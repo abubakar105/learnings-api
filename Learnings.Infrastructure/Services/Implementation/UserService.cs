@@ -5,9 +5,11 @@ using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
+using Learnings.Infrastructure.Mail.InterfaceService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -27,13 +29,18 @@ namespace Learnings.Infrastructure.Services.Implementation
         private readonly UserManager<Users> _userManager;
         private readonly Dictionary<string, string> _refreshTokens = new();
         private readonly JwtSettings _jwtSettings;
-        public UserService(LearningDbContext context, IUserRepository userRepository, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings)
+        private readonly IMailService _mailService;
+        //private readonly IMemoryCache _cache;
+
+        public UserService(LearningDbContext context, IUserRepository userRepository, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService)
         {
             _userRepository = userRepository;
             _userManager = userManager;
             _configuration = configuration;
             _jwtSettings = jwtSettings.Value;
             _context = context;
+            _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+            //_cache = cache;
         }
 
         public async Task<ResponseBase<UserDto>> GetUserByIdAsync(int id)
@@ -461,6 +468,79 @@ namespace Learnings.Infrastructure.Services.Implementation
             {
                 return new ResponseBase<Users>(user, "User already exists", HttpStatusCode.OK);
 
+            }
+        }
+        public async Task<ResponseBase<Users>> ForgetPassword(CheckDuplicateUser model)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                    return new ResponseBase<Users>(null, "User not found", HttpStatusCode.NotFound);
+
+                // Generate password reset token
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // Construct the reset link
+                var resetLink = $"http://localhost:4200/reset-password?email={model.Email}&token={Uri.EscapeDataString(token)}";
+
+                // Compose and send email
+                var emailModel = new MailData
+                {
+                    EmailToId = user.Email,
+                    EmailSubject = "Password Reset Request",
+                    EmailToName = $"{user.FirstName} {user.LastName}",
+                    EmailBody = $@"
+                <p>Dear {user.FirstName} {user.LastName},</p>
+                <p>We received a request to reset your password. Please click the link below to reset your password:</p>
+                <p><a href='{resetLink}'>Reset Password</a></p>
+                <p>Note: This link will expire in 24 hours.</p>
+                <p>If you did not request a password reset, please ignore this email.</p>
+                <p>Best regards,</p>
+                <p>Your Team</p>"
+                };
+
+                if (_mailService.SendMail(emailModel))
+                {
+                    return new ResponseBase<Users>(null, "Password reset email sent successfully.", HttpStatusCode.OK);
+                }
+
+                return new ResponseBase<Users>(null, "Failed to send password reset email. Please try again later.", HttpStatusCode.InternalServerError);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseBase<Users>(null, "An error occurred while processing your request", HttpStatusCode.InternalServerError)
+                {
+                    Errors = new List<string> { ex.Message, ex.InnerException?.Message, ex.StackTrace }
+                };
+            }
+        }
+        public async Task<ResponseBase<Users>> ChangeForgetPassword(ResetPassword model)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                    return new ResponseBase<Users>(null, "User not found", HttpStatusCode.NotFound);
+
+                // Reset the password
+                var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+                if (result.Succeeded)
+                {
+                    return new ResponseBase<Users>(null, "Password reset successfully.", HttpStatusCode.OK);
+                }
+
+                return new ResponseBase<Users>(null, "Reset link expired please verify user again.", HttpStatusCode.BadRequest)
+                {
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseBase<Users>(null, "An error occurred while resetting the password", HttpStatusCode.InternalServerError)
+                {
+                    Errors = new List<string> { ex.Message, ex.StackTrace }
+                };
             }
         }
     }

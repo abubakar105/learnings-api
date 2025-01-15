@@ -112,6 +112,13 @@ namespace Core_Learnings.Controllers
 
             return Ok(response);
         }
+        [HttpPost("changeForgetPassword")]
+        public async Task<ResponseBase<Users>> ChangeForgetPassword([FromBody] ResetPassword model)
+        {
+            var response = await _userService.ChangeForgetPassword(model);
+
+            return response;
+        }
         [HttpPost("resetPassword")]
         public async Task<ResponseBase<Users>> ResetPassword([FromBody] ChangePasswordModel model)
         {
@@ -119,5 +126,13 @@ namespace Core_Learnings.Controllers
 
             return response;
         }
+        [HttpPost("forgetPassword")]
+        public async Task<ResponseBase<Users>> ForgetPassword([FromBody] CheckDuplicateUser model)
+        {
+            var response = await _userService.ForgetPassword(model);
+
+            return response;
+        }
+
     }
 }

@@ -37,3 +37,23 @@ D:\.net\New folder (2)\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\
 D:\.net\New folder (2)\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.pdb
 D:\.net\New folder (2)\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.genruntimeconfig.cache
 D:\.net\New folder (2)\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\ref\Learnings.Infrastructure.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Infrastructure.deps.json
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Infrastructure.runtimeconfig.json
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Infrastructure.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Infrastructure.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Application.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Domain.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Application.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\bin\Debug\net8.0\Learnings.Domain.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.csproj.AssemblyReference.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.AssemblyInfoInputs.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.AssemblyInfo.cs
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.csproj.CoreCompileInputs.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.sourcelink.json
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.csproj.CopyComplete
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\refint\Learnings.Infrastructure.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\Learnings.Infrastructure.genruntimeconfig.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Infrastructure\obj\Debug\net8.0\ref\Learnings.Infrastructure.dll

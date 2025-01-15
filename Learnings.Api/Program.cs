@@ -4,6 +4,7 @@ using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
+using Learnings.Infrastructure.Mail.InterfaceService;
 using Learnings.Infrastructure.Services.Implementation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +31,8 @@ var configuration = builder.Configuration;
 
 // JWT Settings
 builder.Services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+builder.Services.AddTransient<IMailService, MailService>();
 var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 
@@ -42,6 +45,9 @@ builder.Services.AddSwaggerGen();
 // Configure DbContext.
 builder.Services.AddDbContext<LearningDbContext>(options =>
     options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt =>
+   opt.TokenLifespan = TimeSpan.FromHours(2));
 
 // Configure Identity
 builder.Services.AddIdentity<Users, IdentityRole>()
@@ -130,7 +136,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 6;
+    options.Password.RequiredLength = 8;
     options.Password.RequiredUniqueChars = 1;
 
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
