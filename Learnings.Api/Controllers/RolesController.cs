@@ -1,10 +1,13 @@
 ﻿using Learnings.Application.Dtos;
+using Learnings.Application.Dtos.RolesDto;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Any;
 using System.Net;
 
 namespace Learnings.Api.Controllers
@@ -20,24 +23,99 @@ namespace Learnings.Api.Controllers
         {
             _userRolesService = userRolesService;
         }
-        [HttpGet]
-        public async Task<ActionResult<ResponseBase<UserWithRolesDto>>> GetUserRoles(string email)
+        [HttpPost("Get User Roles")]
+        public async Task<ActionResult<ResponseBase<UserWithRolesDto>>> GetUserRoles([FromBody] Email email)
         {
             var response = await _userRolesService.GetUserRoles(email);
             return response;
         }
-
-        [HttpPost]
-        public async Task<ActionResult<ResponseBase<Users>>> AssignUserRoles(string email, string role)
+        [HttpGet("GetAllRoles")]
+        public async Task<ActionResult<ResponseBase<List<IdentityRole>>>> GetAllRoles()
         {
-            var response = await _userRolesService.AssignUserRoles(email, role);
+            var response = await _userRolesService.GetUserRoles();
+            return response;
+        }
+        [HttpGet("GetRoleById/{roleId}")]
+        public async Task<ActionResult<ResponseBase<IdentityRole>>> GetRoleById(string roleId)
+        {
+            var response = await _userRolesService.GetRoleById(roleId);
+            return response;
+        }
+        [HttpGet("GetPermissionsForRole/{roleId}")]
+        public async Task<ActionResult<ResponseBase<List<PermissionsDto>>>> GetPermissionsForRole(int roleId)
+        {
+            var response = await _userRolesService.GetPermissionsForRole(roleId);
             return response;
         }
 
-        [HttpDelete]
-        public async Task<ActionResult<ResponseBase<Users>>> DeleteUserRoles(string userEmail, string role)
+        [HttpPost("RemovePermissionFromRole")]
+        public async Task<ActionResult<ResponseBase<AssignPermissionsToRoleDTO>>> RemovePermissionFromRole([FromBody] AssignPermissionsToRoleDTO assignPermissionsToRole)
         {
-            var response = await _userRolesService.DeleteUserRoles(userEmail, role);
+            var response = await _userRolesService.RemovePermissionFromRole(assignPermissionsToRole);
+            return response;
+        }
+
+        [HttpPost("CreateRole")]
+        public async Task<ActionResult<ResponseBase<IdentityRole>>> CreateRole([FromBody] RoleDto roleDto)
+        {
+            var response = await _userRolesService.CreateRole(roleDto);
+            return response;
+        }
+
+
+        [HttpPut("UpdateRole")]
+        public async Task<ActionResult<ResponseBase<IdentityRole>>> UpdateRole([FromBody] RoleDto roleDto)
+        {
+            var response = await _userRolesService.UpdateRole(roleDto);
+            return response;
+        }
+        [HttpDelete("DeleteRole/{roleId}")]
+        public async Task<ActionResult<ResponseBase<IdentityRole>>> DeleteRole(string roleId)
+        {
+            var response = await _userRolesService.DeleteRole(roleId);
+            return response;
+        }
+        //[HttpGet("RoleAssignmentHistory/{roleId}")]
+        //public async Task<ActionResult<ResponseBase<List<RoleAssignmentHistoryDto>>>> GetRoleAssignmentHistory(string roleId)
+        //{
+        //    var response = await _userRolesService.GetRoleAssignmentHistory(roleId);
+        //    return response;
+        //}
+        [HttpGet("SearchRoles")]
+        public async Task<ActionResult<ResponseBase<List<IdentityRole>>>> SearchRoles([FromQuery] string searchRole)
+        {
+            var response = await _userRolesService.SearchRoles(searchRole);
+            return response;
+        }
+
+        [HttpPost("AssignPermissionsToRole")]
+        public async Task<ActionResult<ResponseBase<AssignPermissionsToRoleDTO>>> AssignPermissionsToRole([FromBody] AssignPermissionsToRoleDTO assignPermissionsToRole)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new ResponseBase<AssignPermissionsToRoleDTO>(null, "Invalid data.", HttpStatusCode.NotFound)
+                {
+                    Errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList()
+                };
+            }
+            var response = await _userRolesService.assignPermissionsToRole(assignPermissionsToRole);
+            return response;
+        }
+
+        [HttpPost("AssignRoleToUser")]
+        public async Task<ActionResult<ResponseBase<Users>>> AssignUserRoles([FromBody] AssignRole assignRole)
+        {
+            var response = await _userRolesService.AssignUserRoles(assignRole);
+            return response;
+        }
+
+        [HttpDelete("DeleteUserRole")]
+        public async Task<ActionResult<ResponseBase<Users>>> DeleteUserRoles([FromBody] AssignRole removeRole)
+        {
+            var response = await _userRolesService.DeleteUserRoles(removeRole);
             return response;
         }
     }

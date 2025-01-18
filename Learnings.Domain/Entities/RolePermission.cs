@@ -11,15 +11,13 @@ namespace Learnings.Domain.Entities
 {
     public class RolePermissions
     {
-        // Foreign key to the Role (IdentityRole)
         [ForeignKey("Role")]
         public string RoleId { get; set; }
-        public IdentityRole Roles { get; set; }  // Navigation property to the Role
+        public IdentityRole Roles { get; set; }  
 
-        // Foreign key to the Permission
         [ForeignKey("Permissions")]
         public int PermissionId { get; set; }
-        public Permissions Permission { get; set; }  // Navigation property to the Permission
+        public Permissions Permission { get; set; }  
     }
 
 }
