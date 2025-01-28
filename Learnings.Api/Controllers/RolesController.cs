@@ -75,12 +75,6 @@ namespace Learnings.Api.Controllers
             var response = await _userRolesService.DeleteRole(roleId);
             return response;
         }
-        //[HttpGet("RoleAssignmentHistory/{roleId}")]
-        //public async Task<ActionResult<ResponseBase<List<RoleAssignmentHistoryDto>>>> GetRoleAssignmentHistory(string roleId)
-        //{
-        //    var response = await _userRolesService.GetRoleAssignmentHistory(roleId);
-        //    return response;
-        //}
         [HttpGet("SearchRoles")]
         public async Task<ActionResult<ResponseBase<List<IdentityRole>>>> SearchRoles([FromQuery] string searchRole)
         {

@@ -58,6 +58,7 @@ builder.Services.AddIdentity<Users, IdentityRole>()
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRolesService, UserRolesService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPermissionsService, PermissionsService>();
 
 
 builder.Services.AddAuthentication(options =>
