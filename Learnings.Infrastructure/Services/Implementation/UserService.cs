@@ -62,18 +62,55 @@ namespace Learnings.Infrastructure.Services.Implementation
             return new ResponseBase<UserDto>(userDto, "User", HttpStatusCode.OK);
         }
 
-        public async Task<ResponseBase<List<UserDto>>> GetAllUsersAsync()
+        public async Task<ResponseBase<List<UsersDto>>> GetAllUsersAsync()
         {
             var users = await _userRepository.GetAllUsersAsync();
-            var userDtos = users.Data.Select(user => new UserDto
-            {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber
-            }).ToList();
 
-            return new ResponseBase<List<UserDto>>(userDtos, "Users retrieved successfully.", HttpStatusCode.OK);
+            var userDtos = new List<UsersDto>();
+
+            foreach (var user in users.Data)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+
+                userDtos.Add(new UsersDto
+                {
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Status = user.FirstName,
+                    Roles = roles.ToList()
+                });
+            }
+
+            return new ResponseBase<List<UsersDto>>(userDtos, "Users retrieved successfully.", HttpStatusCode.OK);
+        }
+
+        public async Task<ResponseBase<List<UsersDto>>> GetAllAdminsAsync()
+        {
+            var users = await _userRepository.GetAllUsersAsync();
+
+            var userDtos = new List<UsersDto>();
+
+            foreach (var user in users.Data)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Count == 0 || (roles.Count == 1 && roles.Contains("User")))
+                {
+                    continue;
+                }
+                userDtos.Add(new UsersDto
+                {
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    Status = user.FirstName,
+                    Roles = roles.ToList()
+                });
+            }
+
+            return new ResponseBase<List<UsersDto>>(userDtos, "Users retrieved successfully.", HttpStatusCode.OK);
         }
 
         public async Task<ResponseBase<UserDto>> AddUserAsync(UserDto userDto)

@@ -7,8 +7,9 @@ namespace Learnings.Application.Services.Interface
     public interface IUserService
     {
         Task<ResponseBase<UserDto>> GetUserByIdAsync(int id);
-        Task<ResponseBase<List<UserDto>>> GetAllUsersAsync();
+        Task<ResponseBase<List<UsersDto>>> GetAllUsersAsync();
         Task<ResponseBase<List<Users>>> GetAllUsersAsyncIdentity();
+        Task<ResponseBase<List<UsersDto>>> GetAllAdminsAsync();
         Task<ResponseBase<UserDto>> AddUserAsync(UserDto user);
         Task<ResponseBase<Users>> AddUserAsyncIdentity(UserDto user);
         Task<ResponseBase<Users>> CheckEmailExists(string email);

@@ -76,7 +76,7 @@ namespace Learnings.Infrastrcuture.Repositories.Implementation
 
                 await _context.Users.AddAsync(user);
                 await _context.SaveChangesAsync();
-                return response = new ResponseBase<Users>(user, "User Created Successfully", HttpStatusCode.InternalServerError);
+                return response = new ResponseBase<Users>(user, "User Created Successfully", HttpStatusCode.Created);
             }
             catch (Exception ex)
             {

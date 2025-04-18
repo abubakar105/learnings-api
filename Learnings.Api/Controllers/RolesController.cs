@@ -12,7 +12,7 @@ using System.Net;
 
 namespace Learnings.Api.Controllers
 {
-    [Authorize(Roles = "SuperAdmin")]
+    //[Authorize(Roles = "SuperAdmin")]
     [Route("api/[controller]")]
     [ApiController]
     public class RolesController : ControllerBase
@@ -99,7 +99,7 @@ namespace Learnings.Api.Controllers
             return response;
         }
 
-        [HttpPost("AssignRoleToUser")]
+        [HttpPost("AssignOrAddRoleToUser")]
         public async Task<ActionResult<ResponseBase<Users>>> AssignUserRoles([FromBody] AssignRole assignRole)
         {
             var response = await _userRolesService.AssignUserRoles(assignRole);
