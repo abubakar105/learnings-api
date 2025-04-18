@@ -73,6 +73,16 @@ namespace Core_Learnings.Controllers
 
             return Ok(response);
         }
+        [HttpGet("GetAllAdmins")]
+        public async Task<ActionResult<ResponseBase<List<UsersDto>>>> GetAllAdmins()
+        {
+            var response = await _userService.GetAllAdminsAsync();
+            if (response.Data == null)
+            {
+                return NotFound(new ResponseBase<string>(null, "Users not found", HttpStatusCode.NotFound));
+            }
+            return Ok(response);
+        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)

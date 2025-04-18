@@ -6,6 +6,7 @@ using Learnings.Application.Services.Interface;
 using Learnings.Domain.Entities;
 using Learnings.Domain.Share;
 using Learnings.Infrastrcuture.ApplicationDbContext;
+using Learnings.Infrastructure.NewFolder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -33,34 +34,62 @@ namespace Learnings.Infrastructure.Services.Implementation
         public async Task<ResponseBase<Users>> AssignUserRoles(AssignRole assignRole)
         {
             ResponseBase<Users> response;
+
             try
             {
-                var user = await _userManager.FindByEmailAsync(assignRole.Email);
+                var appUser = await _userManager.FindByEmailAsync(assignRole.Email);
 
-                if (user == null)
+                if (appUser == null)
                 {
-                    return new ResponseBase<Users>(null, "User not found", HttpStatusCode.NotFound);
-                }
-
-                var isValidRole = await _roleManager.FindByIdAsync(assignRole.RoleId);
-                if (isValidRole == null)
-                {
-                    return new ResponseBase<Users>(null, "Role not found", HttpStatusCode.NotFound);
-                }
-
-                var result = await _userManager.AddToRoleAsync(user, isValidRole.Name);
-
-                if (result.Succeeded)
-                {
-                    return new ResponseBase<Users>(null, "User role assigned successfully", HttpStatusCode.OK);
-                }
-                else
-                {
-                    return new ResponseBase<Users>(null, "Failed to assign role", HttpStatusCode.BadRequest)
+                    var randomPassword = RandomPasswordGenerate.Generate();
+                    var newUser = new Users
                     {
-                        Errors = result.Errors.Select(e => e.Description).ToList()
+                        UserName = assignRole.Email,
+                        Email = assignRole.Email,
+                        FirstName = assignRole.FirstName,
+                        LastName = assignRole.LastName,
+                        PhoneNumber = assignRole.PhoneNumber
                     };
+
+                    var createResult = await _userManager.CreateAsync(newUser, randomPassword);
+                    if (!createResult.Succeeded)
+                    {
+                        var errs = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                        return new ResponseBase<Users>(null,
+                            $"Could not create user: {errs}",
+                            HttpStatusCode.InternalServerError);
+                    }
+
+                    appUser = newUser;
                 }
+
+                var rolesInDb = await _roleManager.Roles
+            .Where(r => assignRole.RoleId.Contains(r.Id))
+            .ToListAsync();
+
+                var validRoleIds = rolesInDb.Select(r => r.Id).ToList();
+                var validRoleNames = rolesInDb.Select(r => r.Name).ToList();
+
+                var invalidIds = assignRole.RoleId.Except(validRoleIds).ToList();
+                if (invalidIds.Any())
+                {
+                    return new ResponseBase<Users>(null,
+                        $"Invalid Role IDs: {string.Join(", ", invalidIds)}",
+                        HttpStatusCode.BadRequest);
+                }
+
+                var addResult = await _userManager.AddToRolesAsync(appUser, validRoleNames);
+                if (!addResult.Succeeded)
+                {
+                    var errs = string.Join("; ", addResult.Errors.Select(e => e.Description));
+                    return new ResponseBase<Users>(appUser,
+                        $"Failed to assign role(s): {errs}",
+                        HttpStatusCode.BadRequest);
+                }
+
+                return new ResponseBase<Users>(appUser,
+                    "User role(s) assigned successfully",
+                    HttpStatusCode.OK);
             }
             catch (Exception ex)
             {
@@ -90,32 +119,42 @@ namespace Learnings.Infrastructure.Services.Implementation
                     return new ResponseBase<Users>(null, "User not found", HttpStatusCode.NotFound);
                 }
 
-                //var isValidRole = GetValidRole(role);
-                var role = await _roleManager.FindByIdAsync(removeRole.RoleId);
-                if (role == null)
+                // Fetch all valid roles from DB using provided Role IDs
+                var rolesFromDb = await _roleManager.Roles
+                    .Where(r => removeRole.RoleId.Contains(r.Id))
+                    .ToListAsync();
+
+                var validRoleNames = rolesFromDb.Select(r => r.Name).ToList();
+                var validRoleIds = rolesFromDb.Select(r => r.Id).ToList();
+
+                // Determine which IDs are invalid (not found in DB)
+                var invalidRoleIds = removeRole.RoleId.Except(validRoleIds).ToList();
+                if (invalidRoleIds.Any())
                 {
-                    return new ResponseBase<Users>(null, "Role not found", HttpStatusCode.NotFound);
+                    return new ResponseBase<Users>(null, $"Invalid Role IDs: {string.Join(", ", invalidRoleIds)}", HttpStatusCode.BadRequest);
                 }
 
                 var userRoles = await _userManager.GetRolesAsync(user);
-                if (!userRoles.Contains(role.Name, StringComparer.OrdinalIgnoreCase))
+                var rolesNotAssigned = validRoleNames
+                    .Where(r => !userRoles.Contains(r, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (rolesNotAssigned.Any())
                 {
-                    return new ResponseBase<Users>(null, role.Name + " role does not exist for the user", HttpStatusCode.OK);
+                    return new ResponseBase<Users>(null, $"Roles not assigned to user: {string.Join(", ", rolesNotAssigned)}", HttpStatusCode.BadRequest);
                 }
 
-                var result = await _userManager.RemoveFromRoleAsync(user, role.Name);
+                var result = await _userManager.RemoveFromRolesAsync(user, validRoleNames);
 
                 if (result.Succeeded)
                 {
-                    return new ResponseBase<Users>(null, role.Name + " role removed successfully", HttpStatusCode.OK);
+                    return new ResponseBase<Users>(null, "Roles removed successfully", HttpStatusCode.OK);
                 }
-                else
+
+                return new ResponseBase<Users>(null, "Failed to remove roles", HttpStatusCode.BadRequest)
                 {
-                    return new ResponseBase<Users>(null, "Failed to remove role", HttpStatusCode.BadRequest)
-                    {
-                        Errors = result.Errors.Select(e => e.Description).ToList()
-                    };
-                }
+                    Errors = result.Errors.Select(e => e.Description).ToList()
+                };
 
             }
             catch (Exception ex)
