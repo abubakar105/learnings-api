@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data;
+using System.Linq;
 using System.Net;
 
 namespace Learnings.Infrastructure.Services.Implementation
@@ -224,6 +225,42 @@ namespace Learnings.Infrastructure.Services.Implementation
                 }
 
                 return new ResponseBase<List<IdentityRole>>(roles, "Roles retrieved successfully", HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = "An error occurred while retrieving roles for the user.";
+                return new ResponseBase<List<IdentityRole>>(null, errorMessage, HttpStatusCode.InternalServerError)
+                {
+                    Errors = new List<string>
+                    {
+                        ex.Message,
+                        ex.InnerException?.Message,
+                        ex.StackTrace
+                    }
+                };
+            }
+        }
+        public async Task<ResponseBase<List<IdentityRole>>> GetAdminRolesNotAssigned(string roleId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(roleId);
+                if (user == null)
+                {
+                    return new ResponseBase<List<IdentityRole>>(null, "User Not Found", HttpStatusCode.NotFound);
+
+                }
+
+                var userNotAssignedRoles = await _context.Roles
+                    .AsNoTracking()
+                    .Where(r => !_context.UserRoles
+                        .Where(ur => ur.UserId == user.Id)
+                        .Select(ur => ur.RoleId)
+                        .Contains(r.Id))
+                    .ToListAsync();
+
+
+                return new ResponseBase<List<IdentityRole>>(userNotAssignedRoles, "Roles retrieved successfully", HttpStatusCode.OK);
             }
             catch (Exception ex)
             {

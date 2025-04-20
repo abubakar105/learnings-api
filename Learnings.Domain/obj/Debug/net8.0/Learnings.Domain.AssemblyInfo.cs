@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Learnings.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6cd23dc52b3a5883f6db0073e09183157262d82c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bbaa29430c6f6d532fe2036731370d6473ab7c2c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Learnings.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Learnings.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

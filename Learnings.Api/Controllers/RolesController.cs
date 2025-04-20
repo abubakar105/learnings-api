@@ -35,6 +35,12 @@ namespace Learnings.Api.Controllers
             var response = await _userRolesService.GetUserRoles();
             return response;
         }
+        [HttpGet("GetAllRolesNotAssigned/{roleId}")]
+        public async Task<ActionResult<ResponseBase<List<IdentityRole>>>> GetAllRolesNotAssigned(string roleId)
+        {
+            var response = await _userRolesService.GetAdminRolesNotAssigned(roleId);
+            return response;
+        }
         [HttpGet("GetRoleById/{roleId}")]
         public async Task<ActionResult<ResponseBase<IdentityRole>>> GetRoleById(string roleId)
         {
@@ -106,7 +112,7 @@ namespace Learnings.Api.Controllers
             return response;
         }
 
-        [HttpDelete("DeleteUserRole")]
+        [HttpPost("DeleteUserRole")]
         public async Task<ActionResult<ResponseBase<Users>>> DeleteUserRoles([FromBody] AssignRole removeRole)
         {
             var response = await _userRolesService.DeleteUserRoles(removeRole);
