@@ -13,6 +13,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
@@ -27,15 +28,17 @@ namespace Learnings.Infrastructure.Services.Implementation
         private readonly IUserRepository _userRepository;
         private readonly IConfiguration _configuration;
         private readonly UserManager<Users> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly Dictionary<string, string> _refreshTokens = new();
         private readonly JwtSettings _jwtSettings;
         private readonly IMailService _mailService;
         //private readonly IMemoryCache _cache;
 
-        public UserService(LearningDbContext context, IUserRepository userRepository, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService)
+        public UserService(LearningDbContext context, IUserRepository userRepository, RoleManager<IdentityRole> roleManager, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService)
         {
             _userRepository = userRepository;
             _userManager = userManager;
+            _roleManager = roleManager;
             _configuration = configuration;
             _jwtSettings = jwtSettings.Value;
             _context = context;
@@ -88,29 +91,52 @@ namespace Learnings.Infrastructure.Services.Implementation
 
         public async Task<ResponseBase<List<UsersDto>>> GetAllAdminsAsync()
         {
-            var users = await _userRepository.GetAllUsersAsync();
-
-            var userDtos = new List<UsersDto>();
-
-            foreach (var user in users.Data)
+            var userRole = await _roleManager.FindByNameAsync("User");
+            if (userRole == null)
             {
-                var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Count == 0 || (roles.Count == 1 && roles.Contains("User")))
-                {
-                    continue;
-                }
-                userDtos.Add(new UsersDto
-                {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
-                    Status = user.FirstName,
-                    Roles = roles.ToList()
-                });
+                return new ResponseBase<List<UsersDto>>(
+                    null,
+                    "No 'User' role defined in the system.",
+                    HttpStatusCode.NotFound
+                );
             }
 
-            return new ResponseBase<List<UsersDto>>(userDtos, "Users retrieved successfully.", HttpStatusCode.OK);
+            var excludedRoleId = userRole.Id;
+
+            var usersWithOtherRoles = await (
+                    from u in _context.Users
+                        .AsNoTracking() 
+                    join ur in _context.UserRoles
+                        on u.Id equals ur.UserId
+                    join r in _context.Roles
+                        on ur.RoleId equals r.Id
+                    group r by new
+                    {
+                        u.Id,
+                        u.FirstName,
+                        u.LastName,
+                        u.Email,
+                        u.PhoneNumber,
+                    } into g
+                     where g.Any(r => r.Id != excludedRoleId)     
+                    select new UsersDto
+                    {
+                        Id = g.Key.Id,
+                        FirstName = g.Key.FirstName,
+                        LastName = g.Key.LastName,
+                        Email = g.Key.Email,
+                        PhoneNumber = g.Key.PhoneNumber,
+                        Roles = g.Select(r => r.Name).ToList(),
+                        RolesId = g.Select(r => r.Id.ToString()).ToList()
+                    }
+                ).ToListAsync();
+
+
+            return new ResponseBase<List<UsersDto>>(
+                usersWithOtherRoles,
+                "Users retrieved successfully.",
+                HttpStatusCode.OK
+            );
         }
 
         public async Task<ResponseBase<UserDto>> AddUserAsync(UserDto userDto)
