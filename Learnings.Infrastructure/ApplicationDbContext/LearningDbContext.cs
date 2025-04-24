@@ -38,6 +38,23 @@ namespace Learnings.Infrastrcuture.ApplicationDbContext
                 .HasOne(rp => rp.Permission)  // RolePermissions has one Permission
                 .WithMany()                    // No collection property in Permissions for RolePermissions
                 .HasForeignKey(rp => rp.PermissionId); // Foreign key to Permissions
+
+            modelBuilder.Entity<Permissions>(b =>
+            {
+                b.HasKey(p => p.PermissionId);
+                b.Property(p => p.PermissionId)
+                 .ValueGeneratedOnAdd();        // <-- auto-gen on INSERT
+                                                // optionally, for SQL Server:
+                                                // .UseIdentityColumn(seed: 1, increment: 1);
+
+                b.Property(p => p.PermissionName)
+                 .IsRequired()
+                 .HasMaxLength(255);
+
+                b.Property(p => p.PermissionDescription)
+                 .IsRequired()
+                 .HasMaxLength(255);
+            });
         }
 
     }

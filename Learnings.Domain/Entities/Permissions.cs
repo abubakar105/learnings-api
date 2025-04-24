@@ -17,5 +17,8 @@ namespace Learnings.Domain.Entities
         [Required]
         [MaxLength(255)]
         public string PermissionName { get; set; }
+        [Required]
+        [MaxLength(255)]
+        public string PermissionDescription { get; set; }
     }
 }

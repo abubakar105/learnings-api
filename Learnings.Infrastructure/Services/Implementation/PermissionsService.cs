@@ -33,7 +33,8 @@ namespace Learnings.Infrastructure.Services.Implementation
             {
                 var permission = new Permissions
                 {
-                    PermissionName = permissionsDto.PermissionName
+                    PermissionName = permissionsDto.PermissionName,
+                    PermissionDescription=permissionsDto.PermissionDescription,
                 };
 
                 _context.Permissions.Add(permission);
