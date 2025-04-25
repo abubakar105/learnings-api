@@ -30,7 +30,7 @@ namespace Learnings.Api.Controllers
             return response;
         }
         [HttpGet("GetAllRoles")]
-        public async Task<ActionResult<ResponseBase<List<IdentityRole>>>> GetAllRoles()
+        public async Task<ActionResult<ResponseBase<List<RoleWithPermissionsDto>>>> GetAllRoles()
         {
             var response = await _userRolesService.GetUserRoles();
             return response;
@@ -116,6 +116,18 @@ namespace Learnings.Api.Controllers
         public async Task<ActionResult<ResponseBase<Users>>> DeleteUserRoles([FromBody] AssignRole removeRole)
         {
             var response = await _userRolesService.DeleteUserRoles(removeRole);
+            return response;
+        }
+        [HttpGet("GetAllNotAssignedPermissionsForRole/{roleId}")]
+        public async Task<ActionResult<ResponseBase<List<PermissionsDto>>>> AllNotAssignedPermissionsOfRole(string roleId)
+        {
+            var response = await _userRolesService.AllNotAssignedPermissionsOfRole(roleId);
+            return response;
+        }
+        [HttpPut("UpdateRoleWithPermissions/{roleId}")]
+        public async Task<ActionResult<ResponseBase<List<PermissionsDto>>>> UpdateRoleWithPermissions([FromBody] UpdateRoleWithPermissionsDTO updateRoleWithPermissionsDTO)
+        {
+            var response = await _userRolesService.UpdateRoleWithPermissions(updateRoleWithPermissionsDTO);
             return response;
         }
     }

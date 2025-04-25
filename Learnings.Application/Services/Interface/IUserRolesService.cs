@@ -11,7 +11,7 @@ namespace Learnings.Application.Services.Interface
         Task<ResponseBase<Users>> AssignUserRoles(AssignRole assignRole);
         Task<ResponseBase<Users>> DeleteUserRoles(AssignRole removeRole);
         Task<ResponseBase<UserWithRolesDto>> GetUserRoles(Email email);
-        Task<ResponseBase<List<IdentityRole>>> GetUserRoles();
+        Task<ResponseBase<List<RoleWithPermissionsDto>>> GetUserRoles();
         Task<ResponseBase<List<IdentityRole>>> GetAdminRolesNotAssigned(string roleId);
         Task<ResponseBase<List<PermissionsDto>>> GetPermissionsForRole(int roleId);
         Task<ResponseBase<List<IdentityRole>>> SearchRoles(string searchRole);
@@ -21,6 +21,8 @@ namespace Learnings.Application.Services.Interface
         Task<ResponseBase<IdentityRole>> UpdateRole(RoleDto roleDto);
         Task<ResponseBase<IdentityRole>> DeleteRole(string roleId);
         Task<ResponseBase<AssignPermissionsToRoleDTO>> assignPermissionsToRole(AssignPermissionsToRoleDTO assignPermissionsToRoleDTO);
+        Task<ResponseBase<List<PermissionsDto>>> AllNotAssignedPermissionsOfRole(string roleId);
+        Task<ResponseBase<List<PermissionsDto>>> UpdateRoleWithPermissions(UpdateRoleWithPermissionsDTO updateRoleWithPermissionsDTO);
 
     }
 }
