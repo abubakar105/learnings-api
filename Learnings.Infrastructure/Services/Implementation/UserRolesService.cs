@@ -213,23 +213,55 @@ namespace Learnings.Infrastructure.Services.Implementation
             }
         }
 
-        public async Task<ResponseBase<List<IdentityRole>>> GetUserRoles()
+        public async Task<ResponseBase<List<RoleWithPermissionsDto>>> GetUserRoles()
         {
             try
             {
-                var roles = await _roleManager.Roles.ToListAsync();
-                if(roles.Count == 0)
-                {
-                    return new ResponseBase<List<IdentityRole>>(null, "Roles Not Found", HttpStatusCode.NotFound);
+                var roles = await _context.Roles
+      .AsNoTracking()
+      .Select(r => new RoleWithPermissionsDto
+      {
+          RoleId = r.Id,
+          RoleName = r.Name,
+          Description = r.NormalizedName, // or r.Description if you extended IdentityRole
 
-                }
+          Permissions = _context.RolePermissions
+              .Where(rp => rp.RoleId == r.Id)
+              .Join(
+                  _context.Permissions,
+                  rp => rp.PermissionId,
+                  p => p.PermissionId,
+                  (rp, p) => new PermissionsDto
+                  {
+                      PermissionId = p.PermissionId,
+                      PermissionName = p.PermissionName,
+                      PermissionDescription = p.PermissionDescription
+                  }
+              )
+              .ToList()
+      })
+      .ToListAsync();
 
-                return new ResponseBase<List<IdentityRole>>(roles, "Roles retrieved successfully", HttpStatusCode.OK);
+                if (!roles.Any())
+                    return new ResponseBase<List<RoleWithPermissionsDto>>(null,
+                        "No roles found.",
+                        HttpStatusCode.NotFound);
+                //var roles = await _context.Roles.AsNoTracking().ToListAsync();
+                //var roleIds= roles.Select(r =>r.Id).ToList();
+                //var rolePermissions= await _context.RolePermissions.AsNoTracking().Select(rp => roleIds.Contains(rp.RoleId)).ToListAsync();
+                //var permissions= await _context.Permissions.AsNoTracking().Select().Where(p => rolePermissions.Contains(p.PermissionId)).ToListAsync();
+                //if(roles.Count == 0)
+                //{
+                //    return new ResponseBase<List<IdentityRole>>(null, "Roles Not Found", HttpStatusCode.NotFound);
+
+                //}
+
+                return new ResponseBase<List<RoleWithPermissionsDto>>(roles, "Roles retrieved successfully", HttpStatusCode.OK);
             }
             catch (Exception ex)
             {
                 var errorMessage = "An error occurred while retrieving roles for the user.";
-                return new ResponseBase<List<IdentityRole>>(null, errorMessage, HttpStatusCode.InternalServerError)
+                return new ResponseBase<List<RoleWithPermissionsDto>>(null, errorMessage, HttpStatusCode.InternalServerError)
                 {
                     Errors = new List<string>
                     {
@@ -574,6 +606,100 @@ namespace Learnings.Infrastructure.Services.Implementation
             {
                 var errorMessage = "An error occurred while searching the role.";
                 return new ResponseBase<List<IdentityRole>>(null, errorMessage, HttpStatusCode.InternalServerError)
+                {
+                    Errors = new List<string>
+                    {
+                        ex.Message,
+                        ex.InnerException?.Message,
+                        ex.StackTrace
+                    }
+                };
+            }
+        }
+
+        public async Task<ResponseBase<List<PermissionsDto>>> AllNotAssignedPermissionsOfRole(string roleId)
+        {
+            try
+            {
+                var role = await _roleManager.FindByIdAsync(roleId);
+
+                if (role == null)
+                {
+                    return new ResponseBase<List<PermissionsDto>>(null, "No roles found matching the search term.", HttpStatusCode.NotFound);
+                }
+                var assignedPermissionIds = await _context.RolePermissions
+    .AsNoTracking()
+    .Where(rp => rp.RoleId == role.Id)         // <-- == instead of !=
+    .Select(rp => rp.PermissionId)
+    .ToListAsync();
+
+                // 3) Fetch all Permissions *whose Id is NOT in* that list
+                var unassignedPermissions = await _context.Permissions
+                    .AsNoTracking()
+                    .Where(p => !assignedPermissionIds.Contains(p.PermissionId))
+                    .Select(p => new PermissionsDto
+                    {
+                        PermissionId = p.PermissionId,
+                        PermissionName = p.PermissionName,
+                        PermissionDescription = p.PermissionDescription
+                    })
+                    .ToListAsync();
+                return new ResponseBase<List<PermissionsDto>>(unassignedPermissions, "Roles retrieved successfully.", HttpStatusCode.OK);
+
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = "An error occurred while searching the role.";
+                return new ResponseBase<List<PermissionsDto>>(null, errorMessage, HttpStatusCode.InternalServerError)
+                {
+                    Errors = new List<string>
+                    {
+                        ex.Message,
+                        ex.InnerException?.Message,
+                        ex.StackTrace
+                    }
+                };
+            }
+        }
+
+        public async Task<ResponseBase<List<PermissionsDto>>> UpdateRoleWithPermissions(UpdateRoleWithPermissionsDTO dto)
+        {
+            try
+            {
+                var role = await _roleManager.FindByIdAsync(dto.RoleId);
+
+                if (role == null)
+                {
+                    return new ResponseBase<List<PermissionsDto>>(null, "No roles found for update.", HttpStatusCode.NotFound);
+                }
+                role.Name = dto.RoleName;
+                //role.Description = dto.RoleDescription;
+                var updateRes = await _roleManager.UpdateAsync(role);
+                if (!updateRes.Succeeded)
+                {
+                    return new ResponseBase<List<PermissionsDto>>(null,
+                        "Failed to update role properties.",
+                        HttpStatusCode.BadRequest)
+                    {
+                        Errors = updateRes.Errors.Select(e => e.Description).ToList()
+                    };
+                }
+                var newRolePermissions = dto.PermissionsList.Select(
+                    pid => new RolePermissions
+                    {
+                        RoleId = role.Id,
+                        PermissionId = pid
+                    }).ToList();
+                _context.RolePermissions.AddRange(newRolePermissions);
+                await _context.SaveChangesAsync();
+
+                return new ResponseBase<List<PermissionsDto>>(null, "Role updated successfully.", HttpStatusCode.OK);
+
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = "An error occurred while searching the role.";
+                return new ResponseBase<List<PermissionsDto>>(null, errorMessage, HttpStatusCode.InternalServerError)
                 {
                     Errors = new List<string>
                     {
