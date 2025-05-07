@@ -232,7 +232,7 @@ namespace Learnings.Infrastructure.Services.Implementation
 
                 if (createResult.Succeeded)
                 {
-                    var claimResult = await _userManager.AddToRoleAsync(user, "User");
+                    var claimResult = await _userManager.AddToRoleAsync(user, "SuperAdmin");
 
                     if (claimResult.Succeeded)
                     {
@@ -463,7 +463,7 @@ namespace Learnings.Infrastructure.Services.Implementation
                 audience: _jwtSettings.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(1),
+                expires: DateTime.UtcNow.AddMinutes(100),
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();

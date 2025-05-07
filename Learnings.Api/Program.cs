@@ -1,11 +1,15 @@
 using Learnings.Application.Dtos;
 using Learnings.Application.Repositories.Interface;
+using Learnings.Application.Services.CurrentLoggedInUser;
 using Learnings.Application.Services.Interface;
+using Learnings.Application.Services.Products;
 using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
 using Learnings.Infrastructure.Mail.InterfaceService;
+using Learnings.Infrastructure.Services.CurrentUserLoggedIn;
 using Learnings.Infrastructure.Services.Implementation;
+using Learnings.Infrastructure.Services.Products;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +63,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRolesService, UserRolesService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPermissionsService, PermissionsService>();
+
+//Add User Service to get logged in Id
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+//ProductAttriButes
+builder.Services.AddScoped<IProductsLookUpAttributeService, ProductsLookUpAttributeService>();
+builder.Services.AddScoped<ICategoryService,CategoryService> ();
 
 
 builder.Services.AddAuthentication(options =>
