@@ -26,6 +26,8 @@ namespace Learnings.Domain.Entities
         public decimal Price { get; set; }
 
         public bool IsActive { get; set; } = true;
+        public ICollection<Category> Categories { get; set; } = new List<Category>();
+
         public ICollection<ProductImage> ProductImages { get; set; }
        = new List<ProductImage>();
         public ICollection<ProductAttribute> ProductAttributes { get; set; }

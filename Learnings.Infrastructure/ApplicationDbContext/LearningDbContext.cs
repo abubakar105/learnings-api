@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Learnings.Infrastrcuture.ApplicationDbContext
@@ -189,6 +191,26 @@ namespace Learnings.Infrastrcuture.ApplicationDbContext
             });
 
 
+            modelBuilder.Entity<Product>()
+         .HasMany(p => p.Categories)
+         .WithMany()
+         .UsingEntity<Dictionary<string, object>>(
+             "ProductCategories",
+             j => j.HasOne<Category>()
+                   .WithMany()
+                   .HasForeignKey("CategoryId")
+                   .HasConstraintName("FK_ProductCategories_Category")
+                   .OnDelete(DeleteBehavior.Cascade),
+             j => j.HasOne<Product>()
+                   .WithMany()
+                   .HasForeignKey("ProductId")
+                   .HasConstraintName("FK_ProductCategories_Product")
+                   .OnDelete(DeleteBehavior.Cascade),
+             j =>
+             {
+                 j.HasKey("ProductId", "CategoryId");
+                 j.ToTable("ProductCategories"); 
+             });
 
 
             modelBuilder.Entity<ProductImage>(img =>
