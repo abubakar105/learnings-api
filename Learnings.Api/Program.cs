@@ -63,6 +63,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRolesService, UserRolesService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPermissionsService, PermissionsService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 //Add User Service to get logged in Id
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
