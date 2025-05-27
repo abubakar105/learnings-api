@@ -11,6 +11,7 @@ namespace Learnings.Application.Services.Products
     public interface ICategoryService
     {
         Task<ResponseBase<List<CategoryDto>>> GetAllAsync();
+        Task<ResponseBase<List<CategoryDto>>> GetAllParentCategoriesAsync();
         Task<ResponseBase<CategoryDto>> GetByIdAsync(Guid id);
         Task<ResponseBase<CategoryDto>> CreateAsync(CategoryDto dto);
         Task<ResponseBase<CategoryDto>> UpdateAsync(Guid id, CategoryDto dto);

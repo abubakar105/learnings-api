@@ -230,5 +230,37 @@ namespace Learnings.Infrastructure.Services.Products
                 return resp;
             }
         }
+
+        public async Task<ResponseBase<List<CategoryDto>>> GetAllParentCategoriesAsync()
+        {
+            try
+            {
+                var list = await _db.Categories
+                    .Where(x => !x.IsDeleted && x.ParentCategoryId == null)
+                    .Select(x => new CategoryDto
+                    {
+                        CategoryId = x.CategoryId,
+                        Name = x.Name,
+                        ParentCategoryId = x.ParentCategoryId,
+                        IsActive = x.IsActive
+                    })
+                    .ToListAsync();
+
+                if (list == null || !list.Any())
+                    return new ResponseBase<List<CategoryDto>>(
+                        null, "No categories found.", HttpStatusCode.NotFound);
+
+                return new ResponseBase<List<CategoryDto>>(
+                    list, "Categories retrieved.", HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                var resp = new ResponseBase<List<CategoryDto>>(
+                    null, "Error retrieving categories.", HttpStatusCode.InternalServerError);
+                resp.Errors.Add(ex.Message);
+                if (ex.InnerException != null) resp.Errors.Add(ex.InnerException.Message);
+                return resp;
+            }
+        }
     }
 }
