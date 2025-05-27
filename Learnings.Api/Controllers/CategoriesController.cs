@@ -15,6 +15,15 @@ namespace Learnings.Api.Controllers
         private readonly ICategoryService _svc;
         public CategoriesController(ICategoryService svc) => _svc = svc;
 
+        [AllowAnonymous]
+        [HttpGet("AllParentCategories")]
+        public async Task<ActionResult<ResponseBase<List<CategoryDto>>>> GetAllParentCategories()
+        {
+            var response = await _svc.GetAllParentCategoriesAsync();
+            if (response.Data == null)
+                return NotFound(new ResponseBase<string>(null, response.Message, response.Status));
+            return Ok(response);
+        }
         [HttpGet]
         public async Task<ActionResult<ResponseBase<List<CategoryDto>>>> GetAll()
         {
