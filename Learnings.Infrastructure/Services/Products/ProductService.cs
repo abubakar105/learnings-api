@@ -125,5 +125,146 @@ namespace Learnings.Infrastructure.Services.Products
             }
         }
 
+        public async Task<ResponseBase<List<AddProductDto>>> GetAllProducts()
+        {
+            try
+            {
+                var products = await _db.Products
+                    .Include(p => p.Categories)          // assuming your Product→Category many-to-many nav
+                    .Include(p => p.ProductAttributes)
+                    .Include(p => p.ProductImages)
+                    .ToListAsync();
+
+                var dtos = products.Select(p => new AddProductDto
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Name,
+                    SKU = p.SKU,
+                    Description = p.Description,
+                    Price = p.Price,
+                    IsActive = p.IsActive,
+
+                    // map each Category to your CategoriesDto
+                    CategoryIds = p.Categories
+                                   .Select(c => new CategoriesDto
+                                   {
+                                       parentCategoryId = (Guid)c.ParentCategoryId, // adjust property name if different
+                                       childCategoryId = c.CategoryId
+                                   })
+                                   .ToList(),
+
+                    // map each ProductAttribute to AttributeValueDto
+                    Attributes = p.ProductAttributes
+                                   .Select(a => new AttributeValueDto
+                                   {
+                                       AttributeTypeId = a.ProductsAttributeId,
+                                       Value = a.Value
+                                   })
+                                   .ToList(),
+
+                    // sort by SortOrder and project Url strings
+                    ImageUrls = p.ProductImages
+                                   .OrderBy(pi => pi.SortOrder)
+                                   .Select(pi => pi.Url)
+                                   .ToList()
+                })
+                .ToList();
+
+                return new ResponseBase<List<AddProductDto>>(
+                    dtos,
+                    "Products retrieved successfully.",
+                    HttpStatusCode.OK
+                );
+            }
+            catch (Exception ex)
+            {
+                var resp = new ResponseBase<List<AddProductDto>>(
+                    null,
+                    "Error retrieving products.",
+                    HttpStatusCode.InternalServerError
+                );
+                resp.Errors.Add(ex.Message);
+                if (ex.InnerException != null) resp.Errors.Add(ex.InnerException.Message);
+                return resp;
+            }
+        }
+        public async Task<ResponseBase<AddProductDto>> GetSingleProduct(Guid productId)
+        {
+            try
+            {
+                // Fetch exactly one product (or null), including all related data
+                var p = await _db.Products
+                    .Include(x => x.Categories)            // if this is your direct nav to Category
+                    .Include(x => x.ProductAttributes)
+                    .Include(x => x.ProductImages)
+                    .SingleOrDefaultAsync(x => x.ProductId == productId);
+
+                // 404 if not found
+                if (p == null)
+                {
+                    return new ResponseBase<AddProductDto>(
+                        null,
+                        "Product not found.",
+                        HttpStatusCode.NotFound
+                    );
+                }
+
+                // Map to your DTO
+                var dto = new AddProductDto
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Name,
+                    SKU = p.SKU,
+                    Description = p.Description,
+                    Price = p.Price,
+                    IsActive = p.IsActive,
+
+                    // CategoriesDto expects parentCategoryId & childCategoryId
+                    CategoryIds = p.Categories
+                        .Select(c => new CategoriesDto
+                        {
+                            parentCategoryId = c.ParentCategoryId.GetValueOrDefault(),
+                            childCategoryId = c.CategoryId
+                        })
+                        .ToList(),
+
+                    // AttributeValueDto expects AttributeTypeId & Value
+                    Attributes = p.ProductAttributes
+                        .Select(a => new AttributeValueDto
+                        {
+                            AttributeTypeId = a.ProductsAttributeId,  // match your FK
+                            Value = a.Value
+                        })
+                        .ToList(),
+
+                    // Just strings for each image URL, ordered by SortOrder
+                    ImageUrls = p.ProductImages
+                        .OrderBy(pi => pi.SortOrder)
+                        .Select(pi => pi.Url)
+                        .ToList()
+                };
+
+                // Wrap and return
+                return new ResponseBase<AddProductDto>(
+                    dto,
+                    "Product retrieved successfully.",
+                    HttpStatusCode.OK
+                );
+            }
+            catch (Exception ex)
+            {
+                var resp = new ResponseBase<AddProductDto>(
+                    null,
+                    "Error retrieving product.",
+                    HttpStatusCode.InternalServerError
+                );
+                resp.Errors.Add(ex.Message);
+                if (ex.InnerException != null)
+                    resp.Errors.Add(ex.InnerException.Message);
+                return resp;
+            }
+        }
+
+
     }
 }

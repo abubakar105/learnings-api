@@ -22,5 +22,17 @@ namespace Learnings.Api.Controllers
             var response = await _productService.CreateProduct(dto);
             return StatusCode((int)response.Status, response);
         }
+        [HttpGet]
+        public async Task<ActionResult<ResponseBase<List<AddProductDto>>>> GetAll()
+        {
+            var response = await _productService.GetAllProducts();
+            return StatusCode((int)response.Status, response);
+        }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ResponseBase<AddProductDto>>> GetProductById([FromRoute(Name = "id")] Guid productId)
+        {
+            var response = await _productService.GetSingleProduct(productId);
+            return StatusCode((int)response.Status, response);
+        }
     }
 }
