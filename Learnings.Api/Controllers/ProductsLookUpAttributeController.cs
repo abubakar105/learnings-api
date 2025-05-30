@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Learnings.Api.Controllers
 {
-    [Authorize(Roles = "SuperAdmin")]
+    //[Authorize(Roles = "SuperAdmin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductsLookUpAttributeController : ControllerBase
@@ -62,6 +62,15 @@ namespace Learnings.Api.Controllers
             var response = await _service.DeleteAsync(id);
             if (response.Data == null)
                 return StatusCode((int)response.Status, response);
+
+            return Ok(response);
+        }
+        [HttpPost("lookupValue")]
+        public async Task<ActionResult<ResponseBase<List<ProductsLookUpAttributesValueDto>>>> GetValuesOfLookupAttribute([FromBody] LookupRequestDto request)
+        {
+            var response = await _service.GetValuesOfLookupAttribute(request);
+            if (response.Data == null)
+                return NotFound(new ResponseBase<string>(null, response.Message, response.Status));
 
             return Ok(response);
         }

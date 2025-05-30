@@ -11,4 +11,21 @@ namespace Learnings.Application.Dtos.ProductsDto
         public Guid ProductsAttributeId { get; set; }
         public string Name { get; set; }
     }
+    public class ProductsLookUpAttributesValueDto
+    {
+        public Guid ProductsAttributeId { get; set; }
+        public string Name { get; set; }
+        public List<LookupsValues>? Values { get; set; }
+    }
+    public class LookupsValues
+    {
+        public Guid ProductsAttributeId { get; set; }
+        public string value { get; set; }
+    }
+    public class LookupRequestDto
+    {
+        public Guid ProductId { get; set; }
+        public List<Guid> ProductsAttributesIds { get; set; }
+    }
+
 }

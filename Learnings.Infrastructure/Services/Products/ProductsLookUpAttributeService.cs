@@ -187,5 +187,47 @@ namespace Learnings.Infrastructure.Services.Products
                 return resp;
             }
         }
+
+        public async Task<ResponseBase<List<ProductsLookUpAttributesValueDto>>> GetValuesOfLookupAttribute(LookupRequestDto lookupIds)
+        {
+            try
+            {
+                var ent = await _db.ProductsAttribute
+                    .Include(x => x.ProductAttributes.Where(pa => pa.ProductId == lookupIds.ProductId))
+                    .Where(x => lookupIds.ProductsAttributesIds.Contains( x.ProductsAttributeId ) && !x.IsDeleted).ToListAsync();
+
+
+                if (ent == null)
+                    return new ResponseBase<List<ProductsLookUpAttributesValueDto>>(
+                        null, "Attribute not found.", HttpStatusCode.NotFound);
+
+                var response = ent.Select( x => new ProductsLookUpAttributesValueDto
+                {
+                    ProductsAttributeId = x.ProductsAttributeId,
+                    Name = x.Name,
+                    Values = x.ProductAttributes.Select(
+                        c => new LookupsValues
+                        {
+                            ProductsAttributeId = c.ProductsAttributeId,
+                            value = c.Value
+                        }
+                        ).ToList()
+
+
+                }).ToList();
+                
+
+                return new ResponseBase<List<ProductsLookUpAttributesValueDto>>(
+                    response, "Attribute values found successfully.", HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                var resp = new ResponseBase<List<ProductsLookUpAttributesValueDto>>(
+                    null, "Error getting Attribute values", HttpStatusCode.InternalServerError);
+                resp.Errors.Add(ex.Message);
+                if (ex.InnerException != null) resp.Errors.Add(ex.InnerException.Message);
+                return resp;
+            }
+        }
     }
 }

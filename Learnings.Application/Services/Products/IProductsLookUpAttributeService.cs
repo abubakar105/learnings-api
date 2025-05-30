@@ -15,5 +15,7 @@ namespace Learnings.Application.Services.Products
         Task<ResponseBase<ProductsLookUpAttributeDto>> CreateAsync(ProductsLookUpAttributeDto dto);
         Task<ResponseBase<ProductsLookUpAttributeDto>> UpdateAsync(Guid id, ProductsLookUpAttributeDto dto);
         Task<ResponseBase<string>> DeleteAsync(Guid id);
+        Task<ResponseBase<List<ProductsLookUpAttributesValueDto>>> GetValuesOfLookupAttribute(LookupRequestDto lookupIds);
+
     }
 }

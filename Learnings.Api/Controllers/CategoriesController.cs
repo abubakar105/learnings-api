@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Learnings.Api.Controllers
 {
-    [Authorize(Roles = "SuperAdmin")]
+    //[Authorize(Roles = "SuperAdmin")]
     [ApiController]
     [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
@@ -34,7 +34,7 @@ namespace Learnings.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ResponseBase<CategoryDto>>> GetById(Guid id)
+        public async Task<ActionResult<ResponseBase<CategoryDto>>> GetById([FromRoute]Guid id)
         {
             var response = await _svc.GetByIdAsync(id);
             if (response.Data == null)
