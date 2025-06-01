@@ -95,6 +95,67 @@ namespace Core_Learnings.Controllers
 
             return Ok(new ResponseBase<string>(null,"User deleted successfully", HttpStatusCode.OK));
         }
+        //[HttpPost("login")]
+        //public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
+        //{
+        //    if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Email) || string.IsNullOrEmpty(loginRequest.Password))
+        //    {
+        //        return BadRequest(new { Message = "Email and password are required." });
+        //    }
+
+        //    var response = await _userService.LoginAsync(loginRequest);
+
+        //    if (response == null)
+        //    {
+        //        return Unauthorized(new { Message = "Invalid email or password." });
+        //    }
+
+        //    return Ok(response);
+        //}
+
+        //[HttpPost("refresh-token")]
+        //public async Task<IActionResult> RefreshToken()
+        //{
+        //    var refreshToken = Request.Cookies["refreshToken"];
+        //    if (string.IsNullOrEmpty(refreshToken))
+        //        return Unauthorized(new { message = "Refresh token not found in cookies" });
+
+        //    var response = await _userService.RefreshTokenAsync(refreshToken);
+        //    if (response == null)
+        //        return Unauthorized(new { message = "Invalid refresh token" });
+
+        //    Response.Cookies.Append("refreshToken", response.RefreshToken, new CookieOptions
+        //    {
+        //        HttpOnly = true,
+        //        Secure = true,
+        //        SameSite = SameSiteMode.Strict,
+        //        Expires = DateTime.UtcNow.AddDays(7)
+        //    });
+
+        //    return Ok(new
+        //    {
+        //        accessToken = response,
+        //        expires = response.Expiration
+        //    });
+        //}
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            var refreshToken = Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(refreshToken))
+                return Unauthorized(new { message = "Refresh token not found in cookies" });
+
+            var response = await _userService.RefreshTokenAsync(refreshToken);
+            if (response == null)
+                return Unauthorized(new { message = "Invalid refresh token" });
+
+            return Ok(new
+            {
+                accessToken = response.Token,
+                expires = response.Expiration
+            });
+        }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginRequest)
         {
@@ -110,18 +171,13 @@ namespace Core_Learnings.Controllers
                 return Unauthorized(new { Message = "Invalid email or password." });
             }
 
-            return Ok(response);
+            return Ok(new
+            {
+                accessToken = response.Token,
+                expires = response.Expiration
+            });
         }
 
-        [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshToken)
-        {
-            var response = await _userService.RefreshTokenAsync(refreshToken.RefreshToken);
-            if (response == null)
-                return Unauthorized(new { message = "Invalid refresh token" });
-
-            return Ok(response);
-        }
         [HttpPost("changeForgetPassword")]
         public async Task<ResponseBase<Users>> ChangeForgetPassword([FromBody] ResetPassword model)
         {
