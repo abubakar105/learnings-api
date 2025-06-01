@@ -6,11 +6,14 @@ using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
 using Learnings.Infrastructure.Mail.InterfaceService;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -32,9 +35,12 @@ namespace Learnings.Infrastructure.Services.Implementation
         private readonly Dictionary<string, string> _refreshTokens = new();
         private readonly JwtSettings _jwtSettings;
         private readonly IMailService _mailService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         //private readonly IMemoryCache _cache;
+        private readonly IWebHostEnvironment _env;
 
-        public UserService(LearningDbContext context, IUserRepository userRepository, RoleManager<IdentityRole> roleManager, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService)
+
+        public UserService(LearningDbContext context, IUserRepository userRepository, RoleManager<IdentityRole> roleManager, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env)
         {
             _userRepository = userRepository;
             _userManager = userManager;
@@ -43,8 +49,27 @@ namespace Learnings.Infrastructure.Services.Implementation
             _jwtSettings = jwtSettings.Value;
             _context = context;
             _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+            _httpContextAccessor = httpContextAccessor;
             //_cache = cache;
+            _env = env;
         }
+        private void SetRefreshTokenCookie(string refreshToken)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,                  // Must be true when SameSite=None
+                SameSite = SameSiteMode.None,   // <-- allow sending on cross-site requests
+                Path = "/",                     // ensure it is sent for "/api/User/refresh-token"
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            _httpContextAccessor.HttpContext.Response.Cookies.Append(
+                "refreshToken",
+                refreshToken,
+                cookieOptions
+            );
+        }
+
 
         public async Task<ResponseBase<UserDto>> GetUserByIdAsync(int id)
         {
@@ -311,7 +336,8 @@ namespace Learnings.Infrastructure.Services.Implementation
 
             var refreshToken = GenerateRefreshToken();
             await SaveRefreshTokenAsync(user.Id, refreshToken);
-            tokenResponse.RefreshToken = refreshToken;
+            //tokenResponse.RefreshToken = refreshToken;
+            SetRefreshTokenCookie(refreshToken);
 
             return tokenResponse;
         }
@@ -332,36 +358,11 @@ namespace Learnings.Infrastructure.Services.Implementation
 
             var newRefreshToken = GenerateRefreshToken();
             await UpdateRefreshTokenAsync(user.Id, newRefreshToken);
-            newTokens.RefreshToken = newRefreshToken;
+            //newTokens.RefreshToken = newRefreshToken;
+            SetRefreshTokenCookie(newRefreshToken);
 
             return newTokens;
         }
-        //public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
-        //{
-        //    var userId = await GetUserIdByRefreshTokenAsync(refreshToken);
-        //    if (string.IsNullOrEmpty(userId))
-        //        return null;
-
-        //    var user = await _userManager.FindByIdAsync(userId);
-        //    if (user == null || !await IsRefreshTokenValid(userId, refreshToken))
-        //        return null;
-
-        //    var storedExpirationString = await _userManager.GetAuthenticationTokenAsync(user, "MyApp", "RefreshTokenExpiration");
-        //    if (DateTime.TryParse(storedExpirationString, out DateTime storedExpiration) && storedExpiration < DateTime.UtcNow)
-        //    {
-        //        return null;
-        //    }
-
-        //    var userRoles = await _userManager.GetRolesAsync(user);
-        //    var newTokens = GenerateTokens(user, userRoles);
-
-        //    var newRefreshToken = GenerateRefreshToken();
-        //    await UpdateRefreshTokenAsync(user.Id, newRefreshToken);
-        //    newTokens.RefreshToken = newRefreshToken;
-
-        //    return newTokens;
-        //}
-
         private async Task SaveRefreshTokenAsync(string userId, string refreshToken)
         {
             var userToken = await _userManager.GetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken");
@@ -373,21 +374,6 @@ namespace Learnings.Infrastructure.Services.Implementation
 
             await _userManager.SetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken", refreshToken);
         }
-        //private async Task SaveRefreshTokenAsync(string userId, string refreshToken)
-        //{
-        //    var userToken = await _userManager.GetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken");
-
-        //    if (!string.IsNullOrEmpty(userToken))
-        //    {
-        //        await _userManager.RemoveAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken");
-        //    }
-
-        //    // Here, you could also store the refresh token expiration date
-        //    var expiration = DateTime.UtcNow.AddDays(7);  // Refresh token expires in 7 days
-        //    await _userManager.SetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshToken", refreshToken);
-        //    await _userManager.SetAuthenticationTokenAsync(await _userManager.FindByIdAsync(userId), "MyApp", "RefreshTokenExpiration", expiration.ToString("o"));
-        //}
-
         private async Task UpdateRefreshTokenAsync(string userId, string newRefreshToken)
         {
             await SaveRefreshTokenAsync(userId, newRefreshToken);
@@ -410,40 +396,6 @@ namespace Learnings.Infrastructure.Services.Implementation
             }
             return null;
         }
-
-
-        //private TokenResponse GenerateTokens(Users user, IList<string> userRole)
-        //{
-        //    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-        //    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        //    var claims = new List<Claim>
-        //    {
-        //        new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-        //        new Claim(JwtRegisteredClaimNames.Email, user.Email),
-        //    };
-        //    foreach (var role in userRole)
-        //    {
-        //        claims.Add(new Claim(ClaimTypes.Role, role));
-        //    }
-        //    var token = new JwtSecurityToken(
-        //        issuer: _jwtSettings.Issuer,
-        //        audience: _jwtSettings.Audience,
-        //        claims: claims,
-        //        notBefore: DateTime.UtcNow,
-        //        expires: DateTime.UtcNow.AddMinutes(15),
-        //        signingCredentials: credentials);
-
-        //    var tokenHandler = new JwtSecurityTokenHandler();
-        //    var tokenString = tokenHandler.WriteToken(token);
-
-        //    return new TokenResponse
-        //    {
-        //        Token = tokenString,
-        //        RefreshToken = null,
-        //        Expiration = DateTime.UtcNow.AddDays(7)
-        //    };
-        //}
         private TokenResponse GenerateTokens(Users user, IList<string> userRole)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
@@ -463,7 +415,7 @@ namespace Learnings.Infrastructure.Services.Implementation
                 audience: _jwtSettings.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(200),
+                expires: DateTime.UtcNow.AddMinutes(30),
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();

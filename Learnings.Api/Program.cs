@@ -28,7 +28,8 @@ builder.Services.AddCors(options =>
                           // Allow specific domains (you can add more domains as required)
                           builder.WithOrigins("http://localhost:4200") // Frontend URL (adjust if different)
                                  .AllowAnyHeader()  // Allow any headers
-                                 .AllowAnyMethod(); // Allow any HTTP methods (GET, POST, PUT, etc.)
+                                 .AllowAnyMethod() // Allow any HTTP methods (GET, POST, PUT, etc.)
+                          .AllowCredentials();
                       });
 });
 var configuration = builder.Configuration;

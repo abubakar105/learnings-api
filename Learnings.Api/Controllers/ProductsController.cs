@@ -1,11 +1,13 @@
 ﻿using Learnings.Application.Dtos.ProductsDto;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Learnings.Api.Controllers
 {
+    [Authorize(Roles = "SuperAdmin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductsController : ControllerBase

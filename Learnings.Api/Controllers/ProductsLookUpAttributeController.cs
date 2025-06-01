@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Learnings.Api.Controllers
 {
-    //[Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductsLookUpAttributeController : ControllerBase
