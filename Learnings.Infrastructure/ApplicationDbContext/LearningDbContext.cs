@@ -27,6 +27,7 @@ namespace Learnings.Infrastrcuture.ApplicationDbContext
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -351,6 +352,67 @@ namespace Learnings.Infrastrcuture.ApplicationDbContext
                   .WithMany()
                   .HasForeignKey(x => x.UpdatedBy)
                   .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+            modelBuilder.Entity<UserAddress>(address =>
+            {
+                // Primary key and default value
+                address.HasKey(x => x.AddressId);
+                address.Property(x => x.AddressId)
+                       .HasDefaultValueSql("NEWID()");
+
+                // Foreign key to Users
+                address.HasOne(x => x.User)
+                       .WithMany(u => u.Addresses)
+                       .HasForeignKey(x => x.UserId)
+                       .OnDelete(DeleteBehavior.Cascade);
+
+                // Fields
+                address.Property(x => x.Street)
+                       .IsRequired()
+                       .HasMaxLength(200);
+
+                address.Property(x => x.City)
+                       .IsRequired()
+                       .HasMaxLength(100);
+
+                address.Property(x => x.State)
+                       .IsRequired()
+                       .HasMaxLength(100);
+
+                address.Property(x => x.Country)
+                       .IsRequired()
+                       .HasMaxLength(100);
+
+                address.Property(x => x.PostalCode)
+                       .IsRequired()
+                       .HasMaxLength(20);
+
+                address.Property(x => x.IsDefault)
+                       .HasDefaultValue(false);
+
+                // Audit
+                address.Property(x => x.CreatedAt)
+                       .HasDefaultValueSql("SYSUTCDATETIME()")
+                       .ValueGeneratedOnAdd();
+
+                // Soft delete
+                address.Property(x => x.IsDeleted)
+                       .HasDefaultValue(false);
+
+                address.HasQueryFilter(x => !x.IsDeleted);
+
+                // CreatedBy / UpdatedBy (FKs to Users)
+                address.HasOne<Users>()
+                       .WithMany()
+                       .HasForeignKey(x => x.CreatedBy)
+                       .OnDelete(DeleteBehavior.Restrict);
+
+                address.HasOne<Users>()
+                       .WithMany()
+                       .HasForeignKey(x => x.UpdatedBy)
+                       .OnDelete(DeleteBehavior.Restrict);
             });
 
             // ------- Cart -------

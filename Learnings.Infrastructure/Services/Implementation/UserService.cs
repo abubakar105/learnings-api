@@ -415,7 +415,7 @@ namespace Learnings.Infrastructure.Services.Implementation
                 audience: _jwtSettings.Audience,
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(30),
+                expires: DateTime.UtcNow.AddMinutes(100),
                 signingCredentials: credentials);
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -426,7 +426,7 @@ namespace Learnings.Infrastructure.Services.Implementation
             {
                 Token = tokenString,
                 RefreshToken = refreshToken,
-                Expiration = DateTime.UtcNow.AddMinutes(1),  // Access token expiration time
+                Expiration = DateTime.UtcNow.AddMinutes(100),  // Access token expiration time
                 RefreshTokenExpiration = DateTime.UtcNow.AddDays(7)  // Refresh token expiration time (7 days)
             };
         }

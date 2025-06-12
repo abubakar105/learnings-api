@@ -7,6 +7,7 @@ using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
 using Learnings.Infrastructure.Mail.InterfaceService;
+using Learnings.Infrastructure.Services;
 using Learnings.Infrastructure.Services.CurrentUserLoggedIn;
 using Learnings.Infrastructure.Services.Implementation;
 using Learnings.Infrastructure.Services.Products;
@@ -72,6 +73,8 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 //ProductAttriButes
 builder.Services.AddScoped<IProductsLookUpAttributeService, ProductsLookUpAttributeService>();
 builder.Services.AddScoped<ICategoryService,CategoryService> ();
+//user address
+builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 
 
 builder.Services.AddAuthentication(options =>
