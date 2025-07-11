@@ -188,6 +188,40 @@ namespace Learnings.Infrastructure.Services.Products
                 return resp;
             }
         }
+        public IQueryable<AddProductDto> GetProducts()
+        {
+            return _db.Products
+                .Include(p => p.Categories)
+                .Include(p => p.ProductAttributes)
+                .Include(p => p.ProductImages)
+                .Select(p => new AddProductDto
+                {
+                    ProductId = p.ProductId,
+                    Name = p.Name,
+                    SKU = p.SKU,
+                    Description = p.Description,
+                    Price = p.Price,
+                    IsActive = p.IsActive,
+                    CategoryIds = p.Categories
+                                   .Select(c => new CategoriesDto
+                                   {
+                                       parentCategoryId = c.ParentCategoryId!.Value,
+                                       childCategoryId = c.CategoryId
+                                   })
+                                   .ToList(),
+                    Attributes = p.ProductAttributes
+                                   .Select(a => new AttributeValueDto
+                                   {
+                                       AttributeTypeId = a.ProductsAttributeId,
+                                       Value = a.Value
+                                   })
+                                   .ToList(),
+                    ImageUrls = p.ProductImages
+                                  .OrderBy(pi => pi.SortOrder)
+                                  .Select(pi => pi.Url)
+                                  .ToList()
+                });
+        }
         public async Task<ResponseBase<AddProductDto>> GetSingleProduct(Guid productId)
         {
             try
