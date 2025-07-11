@@ -13,10 +13,14 @@ using Learnings.Infrastructure.Services.Implementation;
 using Learnings.Infrastructure.Services.Products;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OData.Edm;
+using Microsoft.OData.ModelBuilder;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Learnings.Api.OData;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -43,7 +47,7 @@ var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 
 // Configure services.
-builder.Services.AddControllers();
+//builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -76,6 +80,17 @@ builder.Services.AddScoped<ICategoryService,CategoryService> ();
 //user address
 builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 
+builder.Services
+    .AddControllers()
+    .AddOData(opt => opt
+        .AddRouteComponents("api", ODataConfiguration.GetEdmModel())
+        .Select()
+        .Filter()
+        .OrderBy()
+        .Count()
+        .SkipToken()
+        .SetMaxTop(100)
+    );
 
 builder.Services.AddAuthentication(options =>
 {
@@ -116,6 +131,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+    //opt.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
     opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
