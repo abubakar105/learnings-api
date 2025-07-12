@@ -16,8 +16,6 @@ namespace Learnings.Application.Services.Interface
         Task<ResponseBase<AddProductDto>> CreateProduct(AddProductDto roleDto);
         Task<ResponseBase<List<AddProductDto>>> GetAllProducts();
         Task<ResponseBase<AddProductDto>> GetSingleProduct(Guid productId);
-        IQueryable<AddProductDto> GetProducts();
-
 
     }
 }
