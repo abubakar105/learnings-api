@@ -1,4 +1,5 @@
-﻿using Learnings.Application.Dtos.ProductsDto;
+﻿using Learnings.Application.Dtos.FilterationDto;
+using Learnings.Application.Dtos.ProductsDto;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
@@ -24,12 +25,19 @@ namespace Learnings.Api.Controllers
             var response = await _productService.CreateProduct(dto);
             return StatusCode((int)response.Status, response);
         }
+        //[HttpGet]
+        //public async Task<ActionResult<ResponseBase<List<AddProductDto>>>> GetAll()
+        //{
+        //    var response = await _productService.GetAllProducts();
+        //    return StatusCode((int)response.Status, response);
+        //}
         [HttpGet]
-        public async Task<ActionResult<ResponseBase<List<AddProductDto>>>> GetAll()
+        public async Task<ActionResult<ResponseBase<PagedResult<AddProductDto>>>> Get([FromQuery] ProductFilterDto filter)
         {
-            var response = await _productService.GetAllProducts();
-            return StatusCode((int)response.Status, response);
+            var result = await _productService.GetProductsAsync(filter);
+            return Ok(result);
         }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<ResponseBase<AddProductDto>>> GetProductById([FromRoute(Name = "id")] Guid productId)
         {

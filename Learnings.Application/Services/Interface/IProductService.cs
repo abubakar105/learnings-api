@@ -1,4 +1,5 @@
-﻿using Learnings.Application.Dtos.ProductsDto;
+﻿using Learnings.Application.Dtos.FilterationDto;
+using Learnings.Application.Dtos.ProductsDto;
 using Learnings.Application.Dtos.RolesDto;
 using Learnings.Application.ResponseBase;
 using Learnings.Domain.Entities;
@@ -15,6 +16,7 @@ namespace Learnings.Application.Services.Interface
     {
         Task<ResponseBase<AddProductDto>> CreateProduct(AddProductDto roleDto);
         Task<ResponseBase<List<AddProductDto>>> GetAllProducts();
+        Task<ResponseBase<PagedResult<AddProductDto>>> GetProductsAsync(ProductFilterDto filter);
         Task<ResponseBase<AddProductDto>> GetSingleProduct(Guid productId);
 
     }
