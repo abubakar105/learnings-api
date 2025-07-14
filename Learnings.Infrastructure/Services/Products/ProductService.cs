@@ -1,4 +1,5 @@
-﻿using Learnings.Application.Dtos.ProductsDto;
+﻿using Learnings.Application.Dtos.FilterationDto;
+using Learnings.Application.Dtos.ProductsDto;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.CurrentLoggedInUser;
 using Learnings.Application.Services.Interface;
@@ -45,7 +46,7 @@ namespace Learnings.Infrastructure.Services.Products
                     Description = dto.Description,
                     Price = dto.Price,
                     IsActive = dto.IsActive,
-                    CreatedBy = _current.UserId, 
+                    CreatedBy = _current.UserId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = _current.UserId
 
@@ -188,6 +189,114 @@ namespace Learnings.Infrastructure.Services.Products
                 return resp;
             }
         }
+        public async Task<ResponseBase<PagedResult<AddProductDto>>> GetProductsAsync(ProductFilterDto filter)
+        {
+            try
+            {
+                IQueryable<Product> query = _db.Products
+                    .Include(p => p.Categories)
+                    .Include(p => p.ProductAttributes)
+                    .Include(p => p.ProductImages);
+
+                if (!string.IsNullOrWhiteSpace(filter.Search))
+                {
+                    var term = filter.Search.Trim().ToLower();
+                    query = query.Where(p =>
+                        p.Name.ToLower().Contains(term) || p.Description.ToLower().Contains(term));
+                }
+
+                if (filter.CategoryIds?.Any() == true)
+                {
+                    query = query.Where(p => p.Categories.Any(
+                        c => filter.CategoryIds.Contains(c.CategoryId)));
+                }
+
+                if (!string.IsNullOrWhiteSpace(filter.Gender))
+                {
+                    query = query.Where(p => p.ProductAttributes.Any(
+                        c => c.Value.ToLower().Contains(filter.Gender)));
+                }
+
+                if (filter.MinPrice.HasValue)
+                {
+                    query = query.Where(p => p.Price >= filter.MinPrice.Value);
+                }
+
+                if (filter.MaxPrice.HasValue)
+                {
+                    query = query.Where(p => p.Price <= filter.MaxPrice.Value);
+                }
+
+                var total = await query.CountAsync();
+
+                query = filter.SortBy switch
+                {
+                    "price_desc" => query.OrderByDescending(p => p.Price),
+                    "price_asc" => query.OrderBy(p => p.Price),
+                    "newest" => query.OrderByDescending(p => p.CreatedAt),
+                    _ => query.OrderBy(p => p.Name)
+                };
+
+                var skip = (filter.Page - 1) * filter.PageSize;
+
+                var products = await query
+                    .Skip(skip)
+                    .Take(filter.PageSize)
+                    .Select(p => new AddProductDto
+                    {
+                        ProductId = p.ProductId,
+                        Name = p.Name,
+                        SKU = p.SKU,
+                        Description = p.Description,
+                        Price = p.Price,
+                        IsActive = p.IsActive,
+                        CategoryIds = p.Categories
+                            .Select(c => new CategoriesDto
+                            {
+                                parentCategoryId = c.ParentCategoryId!.Value,
+                                childCategoryId = c.CategoryId
+                            })
+                            .ToList(),
+                        Attributes = p.ProductAttributes
+                            .Select(a => new AttributeValueDto
+                            {
+                                AttributeTypeId = a.ProductsAttributeId,
+                                Value = a.Value
+                            })
+                            .ToList(),
+                        ImageUrls = p.ProductImages
+                            .OrderBy(pi => pi.SortOrder)
+                            .Select(pi => pi.Url)
+                            .ToList()
+                    })
+                    .ToListAsync();
+
+                return new ResponseBase<PagedResult<AddProductDto>>(
+                    new PagedResult<AddProductDto>
+                    {
+                        TotalCount = total,
+                        Items = products
+                    },
+                    "Product retrieved successfully.",
+                    HttpStatusCode.OK
+                );
+            }
+            catch (Exception ex)
+            {
+                var resp = new ResponseBase<PagedResult<AddProductDto>>(
+                    null,
+                    "Error retrieving product.",
+                    HttpStatusCode.InternalServerError
+                );
+
+                resp.Errors.Add(ex.Message);
+                if (ex.InnerException != null)
+                    resp.Errors.Add(ex.InnerException.Message);
+
+                return resp;
+            }
+        }
+
         public async Task<ResponseBase<AddProductDto>> GetSingleProduct(Guid productId)
         {
             try
