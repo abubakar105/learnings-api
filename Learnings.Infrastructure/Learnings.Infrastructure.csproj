@@ -31,4 +31,8 @@
     <ProjectReference Include="..\Learnings.Domain\Learnings.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\CONTRACTS\HUBS\" />
+  </ItemGroup>
+
 </Project>

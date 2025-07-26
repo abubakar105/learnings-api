@@ -309,13 +309,6 @@ D:\.net\New folder (2)\learnings-.net\Learnings.Api\obj\Debug\net8.0\refint\Lear
 D:\.net\New folder (2)\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.pdb
 D:\.net\New folder (2)\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.genruntimeconfig.cache
 D:\.net\New folder (2)\learnings-.net\Learnings.Api\obj\Debug\net8.0\ref\Learnings.Api.dll
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.csproj.AssemblyReference.cache
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.GeneratedMSBuildEditorConfig.editorconfig
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.AssemblyInfoInputs.cache
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.AssemblyInfo.cs
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.csproj.CoreCompileInputs.cache
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.MvcApplicationPartsAssemblyInfo.cache
-D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.sourcelink.json
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\appsettings.Development.json
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\appsettings.json
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Learnings.Api.exe
@@ -348,10 +341,13 @@ D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.ObjectPool.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Identity.Client.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
@@ -367,6 +363,7 @@ D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\MimeKit.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Mono.TextTemplating.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\NETCore.MailKit.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Newtonsoft.Json.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -381,6 +378,7 @@ D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.Formats.Asn1.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.Memory.Data.dll
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.Net.WebSockets.WebSocketProtocol.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.Runtime.Caching.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\System.Security.Permissions.dll
@@ -455,6 +453,14 @@ D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Learnings.Application.pdb
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Learnings.Domain.pdb
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\bin\Debug\net8.0\Learnings.Infrastructure.pdb
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.csproj.AssemblyReference.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.GeneratedMSBuildEditorConfig.editorconfig
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.AssemblyInfoInputs.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.AssemblyInfo.cs
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.csproj.CoreCompileInputs.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.MvcApplicationPartsAssemblyInfo.cs
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.MvcApplicationPartsAssemblyInfo.cache
+D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\Learnings.Api.sourcelink.json
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\staticwebassets.build.json
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\staticwebassets.development.json
 D:\.net\New folder (2)\New folder\learnings-.net\Learnings.Api\obj\Debug\net8.0\staticwebassets\msbuild.Learnings.Api.Microsoft.AspNetCore.StaticWebAssets.props

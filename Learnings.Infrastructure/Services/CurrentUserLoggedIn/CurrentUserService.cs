@@ -2,10 +2,12 @@
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.WebRequestMethods;
 
 namespace Learnings.Infrastructure.Services.CurrentUserLoggedIn
 {
@@ -14,6 +16,8 @@ namespace Learnings.Infrastructure.Services.CurrentUserLoggedIn
         private readonly IHttpContextAccessor _ctx;
         public CurrentUserService(IHttpContextAccessor ctx) => _ctx = ctx;
         public string UserId =>
-            _ctx.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            _ctx.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        public string UserName =>
+            _ctx.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;
     }
 }

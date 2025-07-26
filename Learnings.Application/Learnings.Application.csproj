@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Learnings.Domain\Learnings.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Interface\Contracts\Services\" />
+  </ItemGroup>
+
 </Project>

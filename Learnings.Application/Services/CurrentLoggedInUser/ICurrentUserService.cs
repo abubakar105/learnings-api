@@ -9,5 +9,6 @@ namespace Learnings.Application.Services.CurrentLoggedInUser
     public interface ICurrentUserService
     {
         string UserId { get; }
+        string UserName { get; }
     }
 }
