@@ -1,13 +1,16 @@
+using Learnings.Api.Hubs;
 using Learnings.Application.Dtos;
 using Learnings.Application.Repositories.Interface;
 using Learnings.Application.Services.CurrentLoggedInUser;
 using Learnings.Application.Services.Interface;
+using Learnings.Application.Services.Interface.Contracts.HUBS;
 using Learnings.Application.Services.Products;
 using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
 using Learnings.Infrastructure.Mail.InterfaceService;
 using Learnings.Infrastructure.Services;
+using Learnings.Infrastructure.Services.CONTRACTS.HUBS;
 using Learnings.Infrastructure.Services.CurrentUserLoggedIn;
 using Learnings.Infrastructure.Services.Implementation;
 using Learnings.Infrastructure.Services.Products;
@@ -34,6 +37,9 @@ builder.Services.AddCors(options =>
                       });
 });
 var configuration = builder.Configuration;
+
+//signalR
+builder.Services.AddSignalR();
 
 // JWT Settings
 builder.Services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
@@ -76,6 +82,9 @@ builder.Services.AddScoped<IProductsLookUpAttributeService, ProductsLookUpAttrib
 builder.Services.AddScoped<ICategoryService,CategoryService> ();
 //user address
 builder.Services.AddScoped<IUserAddressService, UserAddressService>();
+//signalR
+builder.Services.AddScoped<IReviewNotificationService, ReviewNotificationService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 
 builder.Services.AddAuthentication(options =>
@@ -178,5 +187,6 @@ app.UseCors(MyAllowSpecificOrigins);
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<ReviewHub>("/hubs/reviews");
 app.MapControllers();
 app.Run();

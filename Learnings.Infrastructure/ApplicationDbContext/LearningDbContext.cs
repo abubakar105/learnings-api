@@ -352,6 +352,9 @@ namespace Learnings.Infrastrcuture.ApplicationDbContext
                   .WithMany()
                   .HasForeignKey(x => x.UpdatedBy)
                   .OnDelete(DeleteBehavior.Restrict);
+
+                rv.Property(x => x.CreatedByName)
+                  .HasMaxLength(256);
             });
 
 
