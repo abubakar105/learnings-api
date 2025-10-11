@@ -24,6 +24,9 @@ using System.Text;
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseUrls("http://0.0.0.0:8080");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -177,14 +180,14 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 // Build and configure the app
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapHub<ReviewHub>("/hubs/reviews");
