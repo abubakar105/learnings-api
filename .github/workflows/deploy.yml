@@ -1,0 +1,64 @@
+name: Deploy to Azure Container Instances
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+  IMAGE_NAME: learnings-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Login to Azure
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    # Login to Azure Container Registry
+    - name: Login to ACR
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    # Build and push Docker image
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+          ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+    
+    # Deploy to Production
+    - name: Deploy to Production
+      run: |
+        az container restart \
+          --name ${{ secrets.PROD_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }}
+    
+    # Deploy to Staging
+    - name: Deploy to Staging
+      run: |
+        az container restart \
+          --name ${{ secrets.STAGING_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }}
+    
+    # Logout from Azure
+    - name: Azure Logout
+      run: |
+        az logout
+      if: always()
