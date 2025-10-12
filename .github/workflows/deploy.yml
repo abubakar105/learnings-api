@@ -43,9 +43,7 @@ jobs:
   deploy-staging:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: staging
-      url: http://${{ secrets.STAGING_CONTAINER_FQDN }}:8080
+    environment: staging
     
     steps:
     - name: Azure Login
@@ -60,7 +58,6 @@ jobs:
           --name ${{ secrets.STAGING_CONTAINER_NAME }} \
           --resource-group ${{ secrets.RESOURCE_GROUP }}
         echo "✅ Staging deployment complete!"
-        echo "🔗 Access at: http://${{ secrets.STAGING_CONTAINER_FQDN }}:8080/swagger"
     
     - name: Azure Logout
       run: az logout
@@ -72,9 +69,7 @@ jobs:
   deploy-production:
     needs: deploy-staging
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: http://${{ secrets.PROD_CONTAINER_FQDN }}:8080
+    environment: production
     
     steps:
     - name: Azure Login
@@ -89,7 +84,6 @@ jobs:
           --name ${{ secrets.PROD_CONTAINER_NAME }} \
           --resource-group ${{ secrets.RESOURCE_GROUP }}
         echo "✅ Production deployment complete!"
-        echo "🔗 Access at: http://${{ secrets.PROD_CONTAINER_FQDN }}:8080/swagger"
     
     - name: Send Success Email
       if: success()
@@ -109,8 +103,6 @@ jobs:
           🔖 Commit: ${{ github.sha }}
           👤 Triggered by: ${{ github.actor }}
           🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          
-          🌐 Production URL: http://${{ secrets.PROD_CONTAINER_FQDN }}:8080/swagger
     
     - name: Send Failure Email
       if: failure()
