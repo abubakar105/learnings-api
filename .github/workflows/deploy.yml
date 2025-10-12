@@ -11,21 +11,16 @@ env:
   IMAGE_NAME: learnings-api
 
 jobs:
-  build-and-deploy:
+  # ==========================================
+  # JOB 1: Build and Push Docker Image
+  # ==========================================
+  build:
     runs-on: ubuntu-latest
     
     steps:
-    # Checkout code
     - name: Checkout code
       uses: actions/checkout@v4
     
-    # Login to Azure
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    # Login to Azure Container Registry
     - name: Login to ACR
       uses: docker/login-action@v3
       with:
@@ -33,7 +28,6 @@ jobs:
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
     
-    # Build and push Docker image
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
@@ -42,23 +36,103 @@ jobs:
         tags: |
           ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
           ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  # ==========================================
+  # JOB 2: Deploy to Staging (Automatic)
+  # ==========================================
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: http://${{ secrets.STAGING_CONTAINER_FQDN }}:8080
     
-    # Deploy to Production
-    - name: Deploy to Production
-      run: |
-        az container restart \
-          --name ${{ secrets.PROD_CONTAINER_NAME }} \
-          --resource-group ${{ secrets.RESOURCE_GROUP }}
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    # Deploy to Staging
     - name: Deploy to Staging
       run: |
+        echo "🚀 Deploying to Staging..."
         az container restart \
           --name ${{ secrets.STAGING_CONTAINER_NAME }} \
           --resource-group ${{ secrets.RESOURCE_GROUP }}
+        echo "✅ Staging deployment complete!"
+        echo "🔗 Access at: http://${{ secrets.STAGING_CONTAINER_FQDN }}:8080/swagger"
     
-    # Logout from Azure
     - name: Azure Logout
+      run: az logout
+      if: always()
+
+  # ==========================================
+  # JOB 3: Deploy to Production (Manual Approval Required)
+  # ==========================================
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: http://${{ secrets.PROD_CONTAINER_FQDN }}:8080
+    
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Deploy to Production
       run: |
-        az logout
+        echo "🚀 Deploying to Production..."
+        az container restart \
+          --name ${{ secrets.PROD_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }}
+        echo "✅ Production deployment complete!"
+        echo "🔗 Access at: http://${{ secrets.PROD_CONTAINER_FQDN }}:8080/swagger"
+    
+    - name: Send Success Email
+      if: success()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "✅ Production Deployment Successful - ${{ github.repository }}"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: DevOps Notifications <${{ secrets.EMAIL_USERNAME }}>
+        body: |
+          Production deployment completed successfully!
+          
+          📦 Repository: ${{ github.repository }}
+          🔖 Commit: ${{ github.sha }}
+          👤 Triggered by: ${{ github.actor }}
+          🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          🌐 Production URL: http://${{ secrets.PROD_CONTAINER_FQDN }}:8080/swagger
+    
+    - name: Send Failure Email
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "❌ Production Deployment Failed - ${{ github.repository }}"
+        to: ${{ secrets.NOTIFICATION_EMAIL }}
+        from: DevOps Notifications <${{ secrets.EMAIL_USERNAME }}>
+        body: |
+          Production deployment FAILED!
+          
+          📦 Repository: ${{ github.repository }}
+          🔖 Commit: ${{ github.sha }}
+          👤 Triggered by: ${{ github.actor }}
+          🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          Please check the logs for details.
+    
+    - name: Azure Logout
+      run: az logout
       if: always()
