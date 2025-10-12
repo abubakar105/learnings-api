@@ -1,3 +1,4 @@
+using Learnings.Api;
 using Learnings.Api.Hubs;
 using Learnings.Application.Dtos;
 using Learnings.Application.Repositories.Interface;
@@ -14,11 +15,13 @@ using Learnings.Infrastructure.Services.CONTRACTS.HUBS;
 using Learnings.Infrastructure.Services.CurrentUserLoggedIn;
 using Learnings.Infrastructure.Services.Implementation;
 using Learnings.Infrastructure.Services.Products;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -178,6 +181,52 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
 });
 
+var aiConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTIONSTRING"];
+
+// Configure Serilog
+var loggerConfig = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "learnings-api")
+    .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
+    .WriteTo.Console();
+
+// Add Application Insights sink only if connection string exists
+if (!string.IsNullOrWhiteSpace(aiConnectionString))
+{
+    var telemetryConfig = new TelemetryConfiguration
+    {
+        ConnectionString = aiConnectionString
+    };
+
+    loggerConfig.WriteTo.ApplicationInsights(
+        telemetryConfig,
+        TelemetryConverter.Traces,
+        Serilog.Events.LogEventLevel.Information);
+}
+
+Log.Logger = loggerConfig.CreateLogger();
+builder.Host.UseSerilog();
+
+// Register Application Insights SDK
+if (!string.IsNullOrWhiteSpace(aiConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry(options =>
+    {
+        options.ConnectionString = aiConnectionString;
+        options.EnableAdaptiveSampling = true;
+        options.EnableQuickPulseMetricStream = true;
+    });
+
+    // Add custom telemetry initializer
+    builder.Services.AddSingleton<ITelemetryInitializer>(sp =>
+        new TelemetryInitializer
+        {
+            RoleName = "learnings-api",
+            EnvironmentName = builder.Environment.EnvironmentName
+        });
+}
+
 // Build and configure the app
 var app = builder.Build();
 //if (app.Environment.IsDevelopment())
@@ -192,4 +241,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapHub<ReviewHub>("/hubs/reviews");
 app.MapControllers();
+Log.Information("Starting Learnings API in {Environment} environment", builder.Environment.EnvironmentName);
 app.Run();
