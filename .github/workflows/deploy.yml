@@ -73,13 +73,53 @@ jobs:
           --environment-variables \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}' \
+            'ASPNETCORE_ENVIRONMENT'='Staging' \
+            'Logging__LogLevel__Default'='Information' \
           --dns-name-label learnings-api-staging \
           --ports 8080 \
           --cpu 1 \
           --memory 1.5 \
           --restart-policy Always
-        echo "✅ Staging deployment complete!"
-        echo "🌐 Access at: http://learnings-api-staging.$(az container show --name ${{ secrets.STAGING_CONTAINER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query 'ipAddress.fqdn' -o tsv):8080/swagger"
+        echo "✅ Staging deployment initiated!"
+    
+    - name: Wait for container to be ready
+      run: |
+        echo "⏳ Waiting for container to start..."
+        sleep 30
+    
+    - name: Check container logs
+      run: |
+        echo "📋 Checking container logs..."
+        az container logs \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --name ${{ secrets.STAGING_CONTAINER_NAME }} \
+          --tail 50
+    
+    - name: Verify deployment health
+      run: |
+        echo "🏥 Checking deployment health..."
+        FQDN=$(az container show \
+          --name ${{ secrets.STAGING_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --query 'ipAddress.fqdn' -o tsv)
+        
+        echo "Testing URL: http://${FQDN}:8080/swagger"
+        
+        # Try health check endpoint
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${FQDN}:8080/swagger || echo "000")
+        
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+          echo "✅ Staging is healthy! (HTTP $HTTP_CODE)"
+          echo "🌐 Access at: http://${FQDN}:8080/swagger"
+        else
+          echo "⚠️ Warning: Staging returned HTTP $HTTP_CODE"
+          echo "📋 Recent logs:"
+          az container logs \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name ${{ secrets.STAGING_CONTAINER_NAME }} \
+            --tail 30
+          exit 1
+        fi
     
     - name: Azure Logout
       run: az logout
@@ -121,13 +161,52 @@ jobs:
           --environment-variables \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}' \
+            'ASPNETCORE_ENVIRONMENT'='Production' \
+            'Logging__LogLevel__Default'='Warning' \
           --dns-name-label learnings-api-prod \
           --ports 8080 \
           --cpu 2 \
           --memory 2 \
           --restart-policy Always
-        echo "✅ Production deployment complete!"
-        echo "🌐 Access at: http://learnings-api-prod.$(az container show --name ${{ secrets.PROD_CONTAINER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query 'ipAddress.fqdn' -o tsv):8080/swagger"
+        echo "✅ Production deployment initiated!"
+    
+    - name: Wait for container to be ready
+      run: |
+        echo "⏳ Waiting for container to start..."
+        sleep 30
+    
+    - name: Check container logs
+      run: |
+        echo "📋 Checking container logs..."
+        az container logs \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --name ${{ secrets.PROD_CONTAINER_NAME }} \
+          --tail 50
+    
+    - name: Verify deployment health
+      run: |
+        echo "🏥 Checking deployment health..."
+        FQDN=$(az container show \
+          --name ${{ secrets.PROD_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --query 'ipAddress.fqdn' -o tsv)
+        
+        echo "Testing URL: http://${FQDN}:8080/swagger"
+        
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${FQDN}:8080/swagger || echo "000")
+        
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+          echo "✅ Production is healthy! (HTTP $HTTP_CODE)"
+          echo "🌐 Access at: http://${FQDN}:8080/swagger"
+        else
+          echo "❌ ERROR: Production returned HTTP $HTTP_CODE"
+          echo "📋 Recent logs:"
+          az container logs \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name ${{ secrets.PROD_CONTAINER_NAME }} \
+            --tail 30
+          exit 1
+        fi
     
     - name: Send Success Email
       if: success()
@@ -147,6 +226,7 @@ jobs:
           🔖 Commit: ${{ github.sha }}
           👤 Triggered by: ${{ github.actor }}
           🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          🌐 URL: http://learnings-api-prod.centralus.azurecontainer.io:8080/swagger
     
     - name: Send Failure Email
       if: failure()
