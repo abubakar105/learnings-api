@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,18 @@ using System.Threading.Tasks;
 namespace Learnings.Application.Dtos.ProductsDto
 {
     public class AddProductDto
+    {
+        public Guid? ProductId { get; set; }
+        public string Name { get; set; }
+        public string SKU { get; set; }
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+        public bool IsActive { get; set; } = true;
+        public List<CategoriesDto> CategoryIds { get; set; } = new();
+        public List<AttributeValueDto> Attributes { get; set; } = new();
+        public List<IFormFile> ImageUrls { get; set; } = new();
+    }
+    public class AllProductDto
     {
         public Guid? ProductId { get; set; }
         public string Name { get; set; }
