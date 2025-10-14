@@ -60,7 +60,9 @@ jobs:
           --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
           --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
           --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+          --os-type Linux \
           --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+          --os-type Linux \
           --environment-variables \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}' \
