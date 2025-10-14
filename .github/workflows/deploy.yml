@@ -71,6 +71,7 @@ jobs:
           --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
           --os-type Linux \
           --environment-variables \
+            'ConnectionStrings__DefaultConnection'='${{ secrets.SQL_CONNECTION_STRING_STAGING }}' \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}' \
             'ASPNETCORE_ENVIRONMENT'='Staging' \
@@ -159,6 +160,7 @@ jobs:
           --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
           --os-type Linux \
           --environment-variables \
+            'ConnectionStrings__DefaultConnection'='${{ secrets.SQL_CONNECTION_STRING_PROD }}' \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}' \
             'ASPNETCORE_ENVIRONMENT'='Production' \
