@@ -91,7 +91,8 @@ builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 //signalR
 builder.Services.AddScoped<IReviewNotificationService, ReviewNotificationService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
-
+//blobstorage services
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 
 builder.Services.AddAuthentication(options =>
 {
