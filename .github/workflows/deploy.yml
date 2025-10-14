@@ -54,35 +54,78 @@ jobs:
       - name: Show az version (debug)
         run: az --version
 
-      - name: Deploy to Staging (create / update)
+      - name: Deploy to Staging (delete+create if needed)
+        env:
+          RG: ${{ secrets.RESOURCE_GROUP }}
+          NAME: ${{ secrets.STAGING_CONTAINER_NAME }}
+          IMAGE: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          REGISTRY: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          REG_USER: ${{ secrets.REGISTRY_USERNAME }}
+          REG_PASS: ${{ secrets.REGISTRY_PASSWORD }}
+          STORAGE_CONN: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}
+          STORAGE_CONTAINER: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}
+          DNS_LABEL: learnings-api-staging-${{ github.run_number }}
         run: |
+          set -euo pipefail
           echo "🚀 Deploying to Staging..."
+          exists() {
+            az container show --resource-group "$RG" --name "$NAME" --query "name" -o tsv 2>/dev/null || echo ""
+          }
+
+          current_name="$(exists)"
+          if [ -n "$current_name" ]; then
+            echo "Container group '$NAME' exists. Inspecting restartPolicy..."
+            restartPolicy=$(az container show --resource-group "$RG" --name "$NAME" --query "restartPolicy" -o tsv 2>/dev/null || az container show --resource-group "$RG" --name "$NAME" --query "properties.restartPolicy" -o tsv || echo "")
+            echo "Current restartPolicy: ${restartPolicy:-<unknown>}"
+
+            if [ "${restartPolicy:-}" != "Always" ]; then
+              echo "Restart policy differs (needs 'Always'). Deleting existing container group..."
+              az container delete --resource-group "$RG" --name "$NAME" --yes
+
+              echo "Waiting for container group to be deleted..."
+              for i in {1..60}; do
+                sleep 2
+                if [ -z "$(exists)" ]; then
+                  echo "Container group deleted."
+                  break
+                fi
+                echo "Still deleting... ($i)"
+              done
+
+              if [ -n "$(exists)" ]; then
+                echo "Timed out waiting for deletion; aborting." >&2
+                exit 1
+              fi
+            else
+              echo "Restart policy already 'Always' — will attempt create (ACI will update if allowed)."
+            fi
+          else
+            echo "Container group '$NAME' does not exist — will create it."
+          fi
+
           az container create \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.STAGING_CONTAINER_NAME }} \
-            --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-            --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-            --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+            --resource-group "$RG" \
+            --name "$NAME" \
+            --image "$IMAGE" \
+            --registry-login-server "$REGISTRY" \
+            --registry-username "$REG_USER" \
+            --registry-password "$REG_PASS" \
             --os-type Linux \
-            --environment-variables AzureStorage__ConnectionString="${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}" AzureStorage__ContainerName="${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}" \
-            --dns-name-label learnings-api-staging-${{ github.run_number }} \
+            --environment-variables AzureStorage__ConnectionString="$STORAGE_CONN" AzureStorage__ContainerName="$STORAGE_CONTAINER" \
+            --dns-name-label "$DNS_LABEL" \
             --ports 80 \
             --cpu 1 \
             --memory 1.5 \
             --restart-policy Always
-          echo "✅ Staging deployment complete!"
 
-      # Optional: if create fails because some immutable property changed, you can delete first and recreate:
-      # - name: Delete existing container group (uncomment to use)
-      #   run: az container delete --name ${{ secrets.STAGING_CONTAINER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --yes
+          echo "✅ Staging deployment complete!"
 
       - name: Azure Logout
         run: az logout
         if: always()
 
   # ==========================================
-  # JOB 3: Deploy to Production (Manual Approval Required)
+  # JOB 3: Deploy to Production (Manual Approval Possible)
   # ==========================================
   deploy-production:
     needs: deploy-staging
@@ -98,23 +141,70 @@ jobs:
       - name: Show az version (debug)
         run: az --version
 
-      - name: Deploy to Production (create / update)
+      - name: Deploy to Production (delete+create if needed)
+        env:
+          RG: ${{ secrets.RESOURCE_GROUP }}
+          NAME: ${{ secrets.PROD_CONTAINER_NAME }}
+          IMAGE: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          REGISTRY: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          REG_USER: ${{ secrets.REGISTRY_USERNAME }}
+          REG_PASS: ${{ secrets.REGISTRY_PASSWORD }}
+          STORAGE_CONN: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}
+          STORAGE_CONTAINER: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}
+          DNS_LABEL: learnings-api-prod-${{ github.run_number }}
         run: |
+          set -euo pipefail
           echo "🚀 Deploying to Production..."
+          exists() {
+            az container show --resource-group "$RG" --name "$NAME" --query "name" -o tsv 2>/dev/null || echo ""
+          }
+
+          current_name="$(exists)"
+          if [ -n "$current_name" ]; then
+            echo "Container group '$NAME' exists. Inspecting restartPolicy..."
+            restartPolicy=$(az container show --resource-group "$RG" --name "$NAME" --query "restartPolicy" -o tsv 2>/dev/null || az container show --resource-group "$RG" --name "$NAME" --query "properties.restartPolicy" -o tsv || echo "")
+            echo "Current restartPolicy: ${restartPolicy:-<unknown>}"
+
+            if [ "${restartPolicy:-}" != "Always" ]; then
+              echo "Restart policy differs (needs 'Always'). Deleting existing container group..."
+              az container delete --resource-group "$RG" --name "$NAME" --yes
+
+              echo "Waiting for container group to be deleted..."
+              for i in {1..60}; do
+                sleep 2
+                if [ -z "$(exists)" ]; then
+                  echo "Container group deleted."
+                  break
+                fi
+                echo "Still deleting... ($i)"
+              done
+
+              if [ -n "$(exists)" ]; then
+                echo "Timed out waiting for deletion; aborting." >&2
+                exit 1
+              fi
+            else
+              echo "Restart policy already 'Always' — will attempt create (ACI will update if allowed)."
+            fi
+          else
+            echo "Container group '$NAME' does not exist — will create it."
+          fi
+
           az container create \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.PROD_CONTAINER_NAME }} \
-            --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
-            --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-            --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+            --resource-group "$RG" \
+            --name "$NAME" \
+            --image "$IMAGE" \
+            --registry-login-server "$REGISTRY" \
+            --registry-username "$REG_USER" \
+            --registry-password "$REG_PASS" \
             --os-type Linux \
-            --environment-variables AzureStorage__ConnectionString="${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}" AzureStorage__ContainerName="${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}" \
-            --dns-name-label learnings-api-prod-${{ github.run_number }} \
+            --environment-variables AzureStorage__ConnectionString="$STORAGE_CONN" AzureStorage__ContainerName="$STORAGE_CONTAINER" \
+            --dns-name-label "$DNS_LABEL" \
             --ports 80 \
             --cpu 2 \
             --memory 2 \
             --restart-policy Always
+
           echo "✅ Production deployment complete!"
 
       - name: Send Success Email
