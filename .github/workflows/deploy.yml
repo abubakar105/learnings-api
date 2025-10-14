@@ -51,6 +51,14 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
+    - name: Delete existing Staging container
+      run: |
+        echo "🗑️ Deleting old staging container..."
+        az container delete \
+          --name ${{ secrets.STAGING_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --yes || echo "Container doesn't exist, skipping delete"
+    
     - name: Deploy to Staging with Environment Variables
       run: |
         echo "🚀 Deploying to Staging..."
@@ -60,18 +68,18 @@ jobs:
           --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
           --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
           --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-          --os-type Linux \
           --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
           --os-type Linux \
           --environment-variables \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}' \
-          --dns-name-label learnings-api-staging-${{ github.run_number }} \
-          --ports 80 \
+          --dns-name-label learnings-api-staging \
+          --ports 8080 \
           --cpu 1 \
           --memory 1.5 \
           --restart-policy Always
         echo "✅ Staging deployment complete!"
+        echo "🌐 Access at: http://learnings-api-staging.$(az container show --name ${{ secrets.STAGING_CONTAINER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query 'ipAddress.fqdn' -o tsv):8080/swagger"
     
     - name: Azure Logout
       run: az logout
@@ -91,6 +99,14 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
+    - name: Delete existing Production container
+      run: |
+        echo "🗑️ Deleting old production container..."
+        az container delete \
+          --name ${{ secrets.PROD_CONTAINER_NAME }} \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
+          --yes || echo "Container doesn't exist, skipping delete"
+    
     - name: Deploy to Production with Environment Variables
       run: |
         echo "🚀 Deploying to Production..."
@@ -101,15 +117,17 @@ jobs:
           --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
           --registry-username ${{ secrets.REGISTRY_USERNAME }} \
           --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+          --os-type Linux \
           --environment-variables \
             'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}' \
             'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}' \
-          --dns-name-label learnings-api-prod-${{ github.run_number }} \
-          --ports 80 \
+          --dns-name-label learnings-api-prod \
+          --ports 8080 \
           --cpu 2 \
           --memory 2 \
           --restart-policy Always
         echo "✅ Production deployment complete!"
+        echo "🌐 Access at: http://learnings-api-prod.$(az container show --name ${{ secrets.PROD_CONTAINER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --query 'ipAddress.fqdn' -o tsv):8080/swagger"
     
     - name: Send Success Email
       if: success()
