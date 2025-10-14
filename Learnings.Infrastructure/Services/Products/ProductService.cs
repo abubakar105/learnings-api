@@ -1,4 +1,5 @@
-﻿using Learnings.Application.Dtos.FilterationDto;
+﻿
+using Learnings.Application.Dtos.FilterationDto;
 using Learnings.Application.Dtos.ProductsDto;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.CurrentLoggedInUser;
@@ -7,6 +8,7 @@ using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,23 +23,30 @@ namespace Learnings.Infrastructure.Services.Products
         private readonly LearningDbContext _db;
         private readonly ICurrentUserService _current;
         private readonly UserManager<Users> _userManager;
-
+        private readonly IBlobStorageService _blobStorageService;
+        private readonly ILogger<ProductService> _logger;
         public ProductService(
             LearningDbContext db,
             ICurrentUserService currentUser,
-            UserManager<Users> userManager)
+            UserManager<Users> userManager,
+            IBlobStorageService blobStorageService,
+            ILogger<ProductService> logger)
         {
             _db = db;
             _current = currentUser;
             _userManager = userManager;
+            _blobStorageService = blobStorageService;
+            _logger = logger;
         }
 
         public async Task<ResponseBase<AddProductDto>> CreateProduct(AddProductDto dto)
         {
             await using var transaction = await _db.Database.BeginTransactionAsync();
-
             try
             {
+                _logger.LogInformation("Creating product: {Name}, Images count: {Count}",
+                    dto.Name, dto.ImageUrls?.Count ?? 0);
+
                 var product = new Product
                 {
                     ProductId = Guid.NewGuid(),
@@ -49,7 +58,6 @@ namespace Learnings.Infrastructure.Services.Products
                     CreatedBy = _current.UserId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedBy = _current.UserId
-
                 };
 
                 if (dto.CategoryIds?.Any() == true)
@@ -58,11 +66,9 @@ namespace Learnings.Infrastructure.Services.Products
                                         .Select(c => c.childCategoryId)
                                         .Distinct()
                                         .ToList();
-
                     var categories = await _db.Categories
                                               .Where(c => categoryIds.Contains(c.CategoryId))
                                               .ToListAsync();
-
                     foreach (var cat in categories)
                     {
                         product.Categories.Add(cat);
@@ -86,31 +92,54 @@ namespace Learnings.Infrastructure.Services.Products
 
                 if (dto.ImageUrls?.Any() == true)
                 {
-                    product.ProductImages = dto.ImageUrls
-                        .Select((url, idx) => new ProductImage
+                    _logger.LogInformation("Uploading {Count} images to blob storage", dto.ImageUrls.Count);
+
+                    var productImages = new List<ProductImage>();
+
+                    for (int i = 0; i < dto.ImageUrls.Count; i++)
+                    {
+                        var file = dto.ImageUrls[i];
+
+                        try
                         {
-                            ImageId = Guid.NewGuid(),
-                            ProductId = product.ProductId,
-                            Url = url,
-                            SortOrder = idx,
-                            AltText = url,
-                            CreatedBy = _current.UserId,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedBy = _current.UserId
-                        })
-                        .ToList();
+                            var imageUrl = await _blobStorageService.UploadFileAsync(file, "product-images");
+
+                            _logger.LogInformation("Image {Index} uploaded: {Url}", i, imageUrl);
+
+                            productImages.Add(new ProductImage
+                            {
+                                ImageId = Guid.NewGuid(),
+                                ProductId = product.ProductId,
+                                Url = imageUrl,  // Blob Storage URL
+                                SortOrder = i,
+                                AltText = $"{dto.Name} - Image {i + 1}",
+                                CreatedBy = _current.UserId,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedBy = _current.UserId
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to upload image {Index}", i);
+                            throw new Exception($"Failed to upload image {i + 1}: {ex.Message}");
+                        }
+                    }
+
+                    product.ProductImages = productImages;
                 }
 
                 _db.Products.Add(product);
                 await _db.SaveChangesAsync();
-
                 await transaction.CommitAsync();
+
+                _logger.LogInformation("Product created successfully: {ProductId}", product.ProductId);
 
                 dto.ProductId = product.ProductId;
                 return new ResponseBase<AddProductDto>(dto, "Product created successfully.", HttpStatusCode.Created);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error creating product");
                 await transaction.RollbackAsync();
 
                 var resp = new ResponseBase<AddProductDto>(
@@ -121,12 +150,104 @@ namespace Learnings.Infrastructure.Services.Products
                 resp.Errors.Add(ex.Message);
                 if (ex.InnerException != null)
                     resp.Errors.Add(ex.InnerException.Message);
-
                 return resp;
             }
         }
+        //public async Task<ResponseBase<AddProductDto>> CreateProduct(AddProductDto dto)
+        //{
+        //    await using var transaction = await _db.Database.BeginTransactionAsync();
 
-        public async Task<ResponseBase<List<AddProductDto>>> GetAllProducts()
+        //    try
+        //    {
+        //        var product = new Product
+        //        {
+        //            ProductId = Guid.NewGuid(),
+        //            Name = dto.Name,
+        //            SKU = dto.SKU,
+        //            Description = dto.Description,
+        //            Price = dto.Price,
+        //            IsActive = dto.IsActive,
+        //            CreatedBy = _current.UserId,
+        //            CreatedAt = DateTime.UtcNow,
+        //            UpdatedBy = _current.UserId
+
+        //        };
+
+        //        if (dto.CategoryIds?.Any() == true)
+        //        {
+        //            var categoryIds = dto.CategoryIds
+        //                                .Select(c => c.childCategoryId)
+        //                                .Distinct()
+        //                                .ToList();
+
+        //            var categories = await _db.Categories
+        //                                      .Where(c => categoryIds.Contains(c.CategoryId))
+        //                                      .ToListAsync();
+
+        //            foreach (var cat in categories)
+        //            {
+        //                product.Categories.Add(cat);
+        //            }
+        //        }
+
+        //        if (dto.Attributes?.Any() == true)
+        //        {
+        //            product.ProductAttributes = dto.Attributes
+        //                .Select(a => new ProductAttribute
+        //                {
+        //                    ProductId = product.ProductId,
+        //                    ProductsAttributeId = a.AttributeTypeId,
+        //                    Value = a.Value,
+        //                    CreatedBy = _current.UserId,
+        //                    UpdatedBy = _current.UserId,
+        //                    CreatedAt = DateTime.UtcNow
+        //                })
+        //                .ToList();
+        //        }
+
+        //        if (dto.ImageUrls?.Any() == true)
+        //        {
+        //            product.ProductImages = dto.ImageUrls
+        //                .Select((url, idx) => new ProductImage
+        //                {
+        //                    ImageId = Guid.NewGuid(),
+        //                    ProductId = product.ProductId,
+        //                    Url = "",
+        //                    SortOrder = idx,
+        //                    AltText =  "",
+        //                    CreatedBy = _current.UserId,
+        //                    CreatedAt = DateTime.UtcNow,
+        //                    UpdatedBy = _current.UserId
+        //                })
+        //                .ToList();
+        //        }
+
+        //        _db.Products.Add(product);
+        //        await _db.SaveChangesAsync();
+
+        //        await transaction.CommitAsync();
+
+        //        dto.ProductId = product.ProductId;
+        //        return new ResponseBase<AddProductDto>(dto, "Product created successfully.", HttpStatusCode.Created);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await transaction.RollbackAsync();
+
+        //        var resp = new ResponseBase<AddProductDto>(
+        //            null,
+        //            "Error creating product.",
+        //            HttpStatusCode.InternalServerError
+        //        );
+        //        resp.Errors.Add(ex.Message);
+        //        if (ex.InnerException != null)
+        //            resp.Errors.Add(ex.InnerException.Message);
+
+        //        return resp;
+        //    }
+        //}
+
+        public async Task<ResponseBase<List<AllProductDto>>> GetAllProducts()
         {
             try
             {
@@ -136,7 +257,7 @@ namespace Learnings.Infrastructure.Services.Products
                     .Include(p => p.ProductImages)
                     .ToListAsync();
 
-                var dtos = products.Select(p => new AddProductDto
+                var dtos = products.Select(p => new AllProductDto
                 {
                     ProductId = p.ProductId,
                     Name = p.Name,
@@ -160,8 +281,8 @@ namespace Learnings.Infrastructure.Services.Products
                                    {
                                        AttributeTypeId = a.ProductsAttributeId,
                                        Value = a.Value
-                                   })
-                                   .ToList(),
+                                   }).ToList()
+                                   ,
 
                     // sort by SortOrder and project Url strings
                     ImageUrls = p.ProductImages
@@ -171,7 +292,7 @@ namespace Learnings.Infrastructure.Services.Products
                 })
                 .ToList();
 
-                return new ResponseBase<List<AddProductDto>>(
+                return new ResponseBase<List<AllProductDto>>(
                     dtos,
                     "Products retrieved successfully.",
                     HttpStatusCode.OK
@@ -179,7 +300,7 @@ namespace Learnings.Infrastructure.Services.Products
             }
             catch (Exception ex)
             {
-                var resp = new ResponseBase<List<AddProductDto>>(
+                var resp = new ResponseBase<List<AllProductDto>>(
                     null,
                     "Error retrieving products.",
                     HttpStatusCode.InternalServerError
@@ -189,7 +310,7 @@ namespace Learnings.Infrastructure.Services.Products
                 return resp;
             }
         }
-        public async Task<ResponseBase<PagedResult<AddProductDto>>> GetProductsAsync(ProductFilterDto filter)
+        public async Task<ResponseBase<PagedResult<AllProductDto>>> GetProductsAsync(ProductFilterDto filter)
         {
             try
             {
@@ -242,7 +363,7 @@ namespace Learnings.Infrastructure.Services.Products
                 var products = await query
                     .Skip(skip)
                     .Take(filter.PageSize)
-                    .Select(p => new AddProductDto
+                    .Select(p => new AllProductDto
                     {
                         ProductId = p.ProductId,
                         Name = p.Name,
@@ -263,7 +384,8 @@ namespace Learnings.Infrastructure.Services.Products
                                 AttributeTypeId = a.ProductsAttributeId,
                                 Value = a.Value
                             })
-                            .ToList(),
+                            .ToList()
+                            ,
                         ImageUrls = p.ProductImages
                             .OrderBy(pi => pi.SortOrder)
                             .Select(pi => pi.Url)
@@ -271,8 +393,8 @@ namespace Learnings.Infrastructure.Services.Products
                     })
                     .ToListAsync();
 
-                return new ResponseBase<PagedResult<AddProductDto>>(
-                    new PagedResult<AddProductDto>
+                return new ResponseBase<PagedResult<AllProductDto>>(
+                    new PagedResult<AllProductDto>
                     {
                         TotalCount = total,
                         Items = products
@@ -283,7 +405,7 @@ namespace Learnings.Infrastructure.Services.Products
             }
             catch (Exception ex)
             {
-                var resp = new ResponseBase<PagedResult<AddProductDto>>(
+                var resp = new ResponseBase<PagedResult<AllProductDto>>(
                     null,
                     "Error retrieving product.",
                     HttpStatusCode.InternalServerError
@@ -297,7 +419,7 @@ namespace Learnings.Infrastructure.Services.Products
             }
         }
 
-        public async Task<ResponseBase<AddProductDto>> GetSingleProduct(Guid productId)
+        public async Task<ResponseBase<AllProductDto>> GetSingleProduct(Guid productId)
         {
             try
             {
@@ -311,7 +433,7 @@ namespace Learnings.Infrastructure.Services.Products
                 // 404 if not found
                 if (p == null)
                 {
-                    return new ResponseBase<AddProductDto>(
+                    return new ResponseBase<AllProductDto>(
                         null,
                         "Product not found.",
                         HttpStatusCode.NotFound
@@ -319,7 +441,7 @@ namespace Learnings.Infrastructure.Services.Products
                 }
 
                 // Map to your DTO
-                var dto = new AddProductDto
+                var dto = new AllProductDto
                 {
                     ProductId = p.ProductId,
                     Name = p.Name,
@@ -354,7 +476,7 @@ namespace Learnings.Infrastructure.Services.Products
                 };
 
                 // Wrap and return
-                return new ResponseBase<AddProductDto>(
+                return new ResponseBase<AllProductDto>(
                     dto,
                     "Product retrieved successfully.",
                     HttpStatusCode.OK
@@ -362,7 +484,7 @@ namespace Learnings.Infrastructure.Services.Products
             }
             catch (Exception ex)
             {
-                var resp = new ResponseBase<AddProductDto>(
+                var resp = new ResponseBase<AllProductDto>(
                     null,
                     "Error retrieving product.",
                     HttpStatusCode.InternalServerError
@@ -377,3 +499,4 @@ namespace Learnings.Infrastructure.Services.Products
 
     }
 }
+
