@@ -86,7 +86,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 //ProductAttriButes
 builder.Services.AddScoped<IProductsLookUpAttributeService, ProductsLookUpAttributeService>();
 builder.Services.AddScoped<ICategoryService,CategoryService> ();
-//user address
+//user addres
 builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 //signalR
 builder.Services.AddScoped<IReviewNotificationService, ReviewNotificationService>();
