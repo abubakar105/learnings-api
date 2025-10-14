@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - learning-instance
+name: Deploy to Azure Container Instances
 
 on:
   push:
@@ -9,57 +6,155 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  REGISTRY_LOGIN_SERVER: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+  IMAGE_NAME: learnings-api
+
 jobs:
+  # ==========================================
+  # JOB 1: Build and Push Docker Image
+  # ==========================================
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
+      - name: Login to ACR
+        uses: docker/login-action@v3
         with:
-          dotnet-version: '8.x'
+          registry: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
-
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-  deploy:
-    runs-on: ubuntu-latest
+  # ==========================================
+  # JOB 2: Deploy to Staging (Automatic)
+  # ==========================================
+  deploy-staging:
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+    runs-on: ubuntu-latest
+    environment: staging
 
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          name: .net-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B8F6DCDE66A04312BA2CFC3DBB86F314 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FA1F64AE884444C19217D7E482E8D857 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_174CDEA39E6D4D23A04F0FC4EAB34B98 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
+      - name: Show az version (debug)
+        run: az --version
+
+      - name: Deploy to Staging (create / update)
+        run: |
+          echo "🚀 Deploying to Staging..."
+          az container create \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name ${{ secrets.STAGING_CONTAINER_NAME }} \
+            --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+            --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+            --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+            --os-type Linux \
+            --environment-variables AzureStorage__ConnectionString="${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}" AzureStorage__ContainerName="${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}" \
+            --dns-name-label learnings-api-staging-${{ github.run_number }} \
+            --ports 80 \
+            --cpu 1 \
+            --memory 1.5 \
+            --restart-policy Always
+          echo "✅ Staging deployment complete!"
+
+      # Optional: if create fails because some immutable property changed, you can delete first and recreate:
+      # - name: Delete existing container group (uncomment to use)
+      #   run: az container delete --name ${{ secrets.STAGING_CONTAINER_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }} --yes
+
+      - name: Azure Logout
+        run: az logout
+        if: always()
+
+  # ==========================================
+  # JOB 3: Deploy to Production (Manual Approval Required)
+  # ==========================================
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          app-name: 'learning-instance'
-          slot-name: 'Production'
-          package: .
-          
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Show az version (debug)
+        run: az --version
+
+      - name: Deploy to Production (create / update)
+        run: |
+          echo "🚀 Deploying to Production..."
+          az container create \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name ${{ secrets.PROD_CONTAINER_NAME }} \
+            --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+            --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+            --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+            --os-type Linux \
+            --environment-variables AzureStorage__ConnectionString="${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}" AzureStorage__ContainerName="${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}" \
+            --dns-name-label learnings-api-prod-${{ github.run_number }} \
+            --ports 80 \
+            --cpu 2 \
+            --memory 2 \
+            --restart-policy Always
+          echo "✅ Production deployment complete!"
+
+      - name: Send Success Email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Production Deployment Successful - ${{ github.repository }}"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: DevOps Notifications <${{ secrets.EMAIL_USERNAME }}>
+          body: |
+            Production deployment completed successfully!
+
+            📦 Repository: ${{ github.repository }}
+            🔖 Commit: ${{ github.sha }}
+            👤 Triggered by: ${{ github.actor }}
+            🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Production Deployment Failed - ${{ github.repository }}"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: DevOps Notifications <${{ secrets.EMAIL_USERNAME }}>
+          body: |
+            Production deployment FAILED!
+
+            📦 Repository: ${{ github.repository }}
+            🔖 Commit: ${{ github.sha }}
+            👤 Triggered by: ${{ github.actor }}
+            🔗 Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Azure Logout
+        run: az logout
+        if: always()
