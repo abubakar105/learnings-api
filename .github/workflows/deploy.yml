@@ -51,12 +51,24 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    - name: Deploy to Staging
+    - name: Deploy to Staging with Environment Variables
       run: |
         echo "🚀 Deploying to Staging..."
-        az container restart \
+        az container create \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
           --name ${{ secrets.STAGING_CONTAINER_NAME }} \
-          --resource-group ${{ secrets.RESOURCE_GROUP }}
+          --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+          --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+          --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+          --environment-variables \
+            'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_STAGING }}' \
+            'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_STAGING }}' \
+          --dns-name-label learnings-api-staging-${{ github.run_number }} \
+          --ports 80 \
+          --cpu 1 \
+          --memory 1.5 \
+          --restart-policy Always
         echo "✅ Staging deployment complete!"
     
     - name: Azure Logout
@@ -77,12 +89,24 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
     
-    - name: Deploy to Production
+    - name: Deploy to Production with Environment Variables
       run: |
         echo "🚀 Deploying to Production..."
-        az container restart \
+        az container create \
+          --resource-group ${{ secrets.RESOURCE_GROUP }} \
           --name ${{ secrets.PROD_CONTAINER_NAME }} \
-          --resource-group ${{ secrets.RESOURCE_GROUP }}
+          --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --registry-login-server ${{ secrets.REGISTRY_LOGIN_SERVER }} \
+          --registry-username ${{ secrets.REGISTRY_USERNAME }} \
+          --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
+          --environment-variables \
+            'AzureStorage__ConnectionString'='${{ secrets.AZURE_STORAGE_CONNECTION_STRING_PROD }}' \
+            'AzureStorage__ContainerName'='${{ secrets.AZURE_STORAGE_CONTAINER_NAME_PROD }}' \
+          --dns-name-label learnings-api-prod-${{ github.run_number }} \
+          --ports 80 \
+          --cpu 2 \
+          --memory 2 \
+          --restart-policy Always
         echo "✅ Production deployment complete!"
     
     - name: Send Success Email
