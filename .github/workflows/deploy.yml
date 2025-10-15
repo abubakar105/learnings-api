@@ -93,8 +93,7 @@ jobs:
         echo "📋 Checking container logs..."
         az container logs \
           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-          --name ${{ secrets.STAGING_CONTAINER_NAME }} \
-          --tail 50
+          --name ${{ secrets.STAGING_CONTAINER_NAME }} | tail -50
     
     - name: Verify deployment health
       run: |
@@ -117,8 +116,7 @@ jobs:
           echo "📋 Recent logs:"
           az container logs \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.STAGING_CONTAINER_NAME }} \
-            --tail 30
+            --name ${{ secrets.STAGING_CONTAINER_NAME }} | tail -30
           exit 1
         fi
     
@@ -182,8 +180,7 @@ jobs:
         echo "📋 Checking container logs..."
         az container logs \
           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-          --name ${{ secrets.PROD_CONTAINER_NAME }} \
-          --tail 50
+          --name ${{ secrets.PROD_CONTAINER_NAME }} | tail -50
     
     - name: Verify deployment health
       run: |
@@ -205,8 +202,7 @@ jobs:
           echo "📋 Recent logs:"
           az container logs \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.PROD_CONTAINER_NAME }} \
-            --tail 30
+            --name ${{ secrets.PROD_CONTAINER_NAME }} | tail -30
           exit 1
         fi
     
