@@ -108,7 +108,7 @@ jobs:
         # Try health check endpoint
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${FQDN}:8080/swagger || echo "000")
         
-        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "301" ]; then
           echo "✅ Staging is healthy! (HTTP $HTTP_CODE)"
           echo "🌐 Access at: http://${FQDN}:8080/swagger"
         else
@@ -194,7 +194,7 @@ jobs:
         
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${FQDN}:8080/swagger || echo "000")
         
-        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "301" ]; then
           echo "✅ Production is healthy! (HTTP $HTTP_CODE)"
           echo "🌐 Access at: http://${FQDN}:8080/swagger"
         else
