@@ -1,11 +1,13 @@
 using Learnings.Api;
 using Learnings.Api.Hubs;
+using Learnings.Api.Workers;
 using Learnings.Application.Dtos;
 using Learnings.Application.Repositories.Interface;
 using Learnings.Application.Services.CurrentLoggedInUser;
 using Learnings.Application.Services.Interface;
 using Learnings.Application.Services.Interface.Contracts.HUBS;
 using Learnings.Application.Services.Products;
+using Learnings.Application.Services.ServiceBus;
 using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
@@ -15,6 +17,7 @@ using Learnings.Infrastructure.Services.CONTRACTS.HUBS;
 using Learnings.Infrastructure.Services.CurrentUserLoggedIn;
 using Learnings.Infrastructure.Services.Implementation;
 using Learnings.Infrastructure.Services.Products;
+using Learnings.Infrastructure.Services.ServiceBus;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -93,6 +96,9 @@ builder.Services.AddScoped<IReviewNotificationService, ReviewNotificationService
 builder.Services.AddScoped<IReviewService, ReviewService>();
 //blobstorage services
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+builder.Services.AddSingleton<IServiceBusService>(sp =>
+    new ServiceBusService(builder.Configuration["ServiceBus:ConnectionString"]));
+builder.Services.AddHostedService<UserRegistrationWorker>();
 
 builder.Services.AddAuthentication(options =>
 {

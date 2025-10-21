@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj": {}
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj": {}
   },
   "projects": {
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj": {
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj",
+        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj",
         "projectName": "Learnings.Domain",
-        "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj",
+        "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj",
         "packagesPath": "C:\\Users\\abu.bakar\\.nuget\\packages\\",
-        "outputPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\obj\\",
+        "outputPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\abu.bakar\\AppData\\Roaming\\NuGet\\NuGet.Config",
