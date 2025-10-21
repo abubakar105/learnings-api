@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Api\\Learnings.Api.csproj": {}
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Api\\Learnings.Api.csproj": {}
   },
   "projects": {
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Api\\Learnings.Api.csproj": {
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Api\\Learnings.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Api\\Learnings.Api.csproj",
+        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Api\\Learnings.Api.csproj",
         "projectName": "Learnings.Api",
-        "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Api\\Learnings.Api.csproj",
+        "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Api\\Learnings.Api.csproj",
         "packagesPath": "C:\\Users\\abu.bakar\\.nuget\\packages\\",
-        "outputPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Api\\obj\\",
+        "outputPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\abu.bakar\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -28,14 +28,14 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj": {
-                "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj"
+              "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj": {
+                "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj"
               },
-              "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj": {
-                "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj"
+              "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj": {
+                "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj"
               },
-              "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj": {
-                "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj"
+              "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj": {
+                "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj"
               }
             }
           }
@@ -50,6 +50,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Azure.Messaging.ServiceBus": {
+              "target": "Package",
+              "version": "[7.20.1, )"
+            },
+            "Azure.Storage.Blobs": {
+              "target": "Package",
+              "version": "[12.26.0, )"
+            },
             "Microsoft.ApplicationInsights.AspNetCore": {
               "target": "Package",
               "version": "[2.23.0, )"
@@ -61,6 +69,10 @@
             "Microsoft.AspNetCore.Cors": {
               "target": "Package",
               "version": "[2.2.0, )"
+            },
+            "Microsoft.AspNetCore.Http": {
+              "target": "Package",
+              "version": "[2.3.0, )"
             },
             "Microsoft.AspNetCore.SignalR": {
               "target": "Package",
@@ -120,14 +132,14 @@
         }
       }
     },
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj": {
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj",
+        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj",
         "projectName": "Learnings.Application",
-        "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj",
+        "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj",
         "packagesPath": "C:\\Users\\abu.bakar\\.nuget\\packages\\",
-        "outputPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\obj\\",
+        "outputPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\abu.bakar\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -144,8 +156,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj": {
-                "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj"
+              "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj": {
+                "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj"
               }
             }
           }
@@ -160,6 +172,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Http": {
+              "target": "Package",
+              "version": "[2.3.0, )"
+            },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.0.10, )"
@@ -185,14 +201,14 @@
         }
       }
     },
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj": {
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj",
+        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj",
         "projectName": "Learnings.Domain",
-        "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj",
+        "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj",
         "packagesPath": "C:\\Users\\abu.bakar\\.nuget\\packages\\",
-        "outputPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\obj\\",
+        "outputPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\abu.bakar\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -250,14 +266,14 @@
         }
       }
     },
-    "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj": {
+    "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj",
+        "projectUniqueName": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj",
         "projectName": "Learnings.Infrastructure",
-        "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj",
+        "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Infrastructure\\Learnings.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\abu.bakar\\.nuget\\packages\\",
-        "outputPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Infrastructure\\obj\\",
+        "outputPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\abu.bakar\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -274,11 +290,11 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj": {
-                "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Application\\Learnings.Application.csproj"
+              "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj": {
+                "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Application\\Learnings.Application.csproj"
               },
-              "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj": {
-                "projectPath": "D:\\.net\\New folder (2)\\New folder\\learnings-.net\\Learnings.Domain\\Learnings.Domain.csproj"
+              "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj": {
+                "projectPath": "D:\\.net\\New folder (2)\\New folder\\server\\learnings-api\\Learnings.Domain\\Learnings.Domain.csproj"
               }
             }
           }
@@ -293,6 +309,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Azure.Messaging.ServiceBus": {
+              "target": "Package",
+              "version": "[7.20.1, )"
+            },
+            "Azure.Storage.Blobs": {
+              "target": "Package",
+              "version": "[12.26.0, )"
+            },
             "MailKit": {
               "target": "Package",
               "version": "[4.8.0, )"
@@ -300,6 +324,10 @@
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[8.0.10, )"
+            },
+            "Microsoft.AspNetCore.Http": {
+              "target": "Package",
+              "version": "[2.3.0, )"
             },
             "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
               "target": "Package",

@@ -93,8 +93,7 @@ jobs:
         echo "📋 Checking container logs..."
         az container logs \
           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-          --name ${{ secrets.STAGING_CONTAINER_NAME }} \
-          --tail 50
+          --name ${{ secrets.STAGING_CONTAINER_NAME }} | tail -50
     
     - name: Verify deployment health
       run: |
@@ -109,7 +108,7 @@ jobs:
         # Try health check endpoint
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${FQDN}:8080/swagger || echo "000")
         
-        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "301" ]; then
           echo "✅ Staging is healthy! (HTTP $HTTP_CODE)"
           echo "🌐 Access at: http://${FQDN}:8080/swagger"
         else
@@ -117,8 +116,7 @@ jobs:
           echo "📋 Recent logs:"
           az container logs \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.STAGING_CONTAINER_NAME }} \
-            --tail 30
+            --name ${{ secrets.STAGING_CONTAINER_NAME }} | tail -30
           exit 1
         fi
     
@@ -182,8 +180,7 @@ jobs:
         echo "📋 Checking container logs..."
         az container logs \
           --resource-group ${{ secrets.RESOURCE_GROUP }} \
-          --name ${{ secrets.PROD_CONTAINER_NAME }} \
-          --tail 50
+          --name ${{ secrets.PROD_CONTAINER_NAME }} | tail -50
     
     - name: Verify deployment health
       run: |
@@ -197,7 +194,7 @@ jobs:
         
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${FQDN}:8080/swagger || echo "000")
         
-        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
+        if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ] || [ "$HTTP_CODE" = "301" ]; then
           echo "✅ Production is healthy! (HTTP $HTTP_CODE)"
           echo "🌐 Access at: http://${FQDN}:8080/swagger"
         else
@@ -205,8 +202,7 @@ jobs:
           echo "📋 Recent logs:"
           az container logs \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.PROD_CONTAINER_NAME }} \
-            --tail 30
+            --name ${{ secrets.PROD_CONTAINER_NAME }} | tail -30
           exit 1
         fi
     

@@ -2,6 +2,7 @@
 using Learnings.Application.Repositories.Interface;
 using Learnings.Application.ResponseBase;
 using Learnings.Application.Services.Interface;
+using Learnings.Application.Services.ServiceBus;
 using Learnings.Domain.Entities;
 using Learnings.Infrastrcuture.ApplicationDbContext;
 using Learnings.Infrastrcuture.Repositories.Implementation;
@@ -38,9 +39,10 @@ namespace Learnings.Infrastructure.Services.Implementation
         private readonly IHttpContextAccessor _httpContextAccessor;
         //private readonly IMemoryCache _cache;
         private readonly IWebHostEnvironment _env;
+        private readonly IServiceBusService _serviceBus;
 
 
-        public UserService(LearningDbContext context, IUserRepository userRepository, RoleManager<IdentityRole> roleManager, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env)
+        public UserService(LearningDbContext context, IUserRepository userRepository, RoleManager<IdentityRole> roleManager, UserManager<Users> userManager, IConfiguration configuration, IOptions<JwtSettings> jwtSettings, IMailService mailService, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, IServiceBusService serviceBus)
         {
             _userRepository = userRepository;
             _userManager = userManager;
@@ -52,6 +54,7 @@ namespace Learnings.Infrastructure.Services.Implementation
             _httpContextAccessor = httpContextAccessor;
             //_cache = cache;
             _env = env;
+            _serviceBus = serviceBus;
         }
         private void SetRefreshTokenCookie(string refreshToken)
         {
@@ -261,6 +264,14 @@ namespace Learnings.Infrastructure.Services.Implementation
 
                     if (claimResult.Succeeded)
                     {
+
+                        await _serviceBus.SendMessageAsync("user-registration-queue", new
+                        {
+                            to = user.Email,
+                            from = "noreply@learnings.com",
+                            subject = "user registered successfully",
+                            body = "user" + user.FirstName + "registered successfully"
+                        });
                         return new ResponseBase<Users>(user, "User created successfully", HttpStatusCode.OK);
                     }
                     else
@@ -323,6 +334,14 @@ namespace Learnings.Infrastructure.Services.Implementation
         }
         public async Task<TokenResponse> LoginAsync(LoginDto loginRequest)
         {
+
+            await _serviceBus.SendMessageAsync("user-registration-queue", new
+            {
+                to = "abubakar.59132@gmail.com",
+                from = "noreply@learnings.com",
+                subject = "user abubakar.59132@gmail.com registered successfully",
+                body = "userabubakar.59132@gmail.com registered successfully"
+            });
             var user = await _userManager.FindByEmailAsync(loginRequest.Email);
             if (user == null)
                 return null;
